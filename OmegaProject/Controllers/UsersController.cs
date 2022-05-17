@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using OmegaProject.DTO;
 using OmegaProject.services;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace OmegaProject.Controllers
@@ -33,6 +34,15 @@ namespace OmegaProject.Controllers
                 return BadRequest("Not found User");
 
             return Ok(user);
+        }
+        [HttpGet]
+        [Route("GetUsersByRole/{role}")]
+        public IActionResult GetUsersByRole(int role)
+        {
+
+            var users = db.Users.Where(u => u.Role == role).ToList();
+            
+            return Ok(users);
         }
 
 
