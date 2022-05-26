@@ -7,6 +7,7 @@
         public int GroupId { get; set; }
         public int SenderId { get; set; }
         public int ReciverId { get; set; }
+        public bool IsOpend { get; set; }   
 
     }
 }

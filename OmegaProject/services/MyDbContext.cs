@@ -11,7 +11,7 @@ namespace OmegaProject.services
         public DbSet<UserDTO> Users { get; set; }
         public DbSet<Role> Role { get; set; }
         public DbSet<Message> Messages { get; set; }
-        public DbSet<Object> Objects { get; set; }
+        public DbSet<Course> Courses { get; set; }
         public DbSet<Grade> Grades { get; set; }
         public DbSet<Group> Gropus { get; set; }
         public MyDbContext(DbContextOptions dbContextOption):base(dbContextOption)
