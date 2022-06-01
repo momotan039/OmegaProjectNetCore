@@ -35,6 +35,7 @@ namespace OmegaProject.Controllers
 
             return Ok(user);
         }
+
         [HttpGet]
         [Route("GetUsersByRole/{role}")]
         public IActionResult GetUsersByRole(int role)
