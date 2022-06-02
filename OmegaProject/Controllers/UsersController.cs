@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
 using OmegaProject.services;
 using System.Collections.Generic;
@@ -45,6 +46,8 @@ namespace OmegaProject.Controllers
             
             return Ok(users);
         }
+
+      
 
 
         [HttpPost]

@@ -14,10 +14,15 @@ namespace OmegaProject.services
         public DbSet<Course> Courses { get; set; }
         public DbSet<Grade> Grades { get; set; }
         public DbSet<Group> Groups { get; set; }
+        public DbSet<UserGroup> UsersGroups { get; set; }
         public MyDbContext(DbContextOptions dbContextOption):base(dbContextOption)
         {
 
         }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+           
+        }
 
-    }
+        }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
 using OmegaProject.services;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace OmegaProject.Controllers
         [Route("GetGroups")]
         public IActionResult GetGroupes()
         {
-            return Ok(db.Groups.ToList());
+            return Ok(db.Groups.Include(g=>g.Course).ToList());
         }
 
 
