@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
 using OmegaProject.services;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace OmegaProject.Controllers
@@ -17,15 +19,40 @@ namespace OmegaProject.Controllers
         }
 
         [HttpGet]
+        [Route("GetCoursesByUserId/{id}")]
+        public IActionResult GetGroupsbyUserId(int id)
+        {
+            if (db.Users.FirstOrDefault(u => u.Id == id) == null)
+                return BadRequest("not found User");
+            var groupsId = new List<int>();
+            //get all groups that in
+            db.UsersGroups.ToList().ForEach(ug =>
+            {
+                if(ug.UserId==id)
+                    groupsId.Add(ug.GroupId);
+            });
+            var courses=new List<Course>();
+            db.Groups.ToList().ForEach(g =>
+            {
+                groupsId.ForEach(gId =>
+                {
+                    if (gId == g.Id)
+                        courses.Add(db.Courses.FirstOrDefault(c=>c.Id==g.CourseId));
+                });
+            });
+            return Ok(courses);
+        }
+
+        [HttpGet]
         [Route("GetCourses/{id?}")]
-        public IActionResult GetCourses(int id=-1)
+        public IActionResult GetCourses(int id = -1)
         {
             Course c = null;
-            if (id==-1)
-            return Ok(db.Courses.ToList());
+            if (id == -1)
+                return Ok(db.Courses.ToList());
             else
             {
-                c=db.Courses.ToList().FirstOrDefault(f => f.Id == id);
+                c = db.Courses.ToList().FirstOrDefault(f => f.Id == id);
             }
             if (c == null)
                 return BadRequest("Course Not Found !!");

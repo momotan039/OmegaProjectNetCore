@@ -19,23 +19,42 @@ namespace OmegaProject.Controllers
         {
             db = _db;
         }
-
+         private List<MessageDTO> MyFun(List<Message> msgs)
+        {
+            var _msgs=new List<MessageDTO>();
+            foreach (var msg in msgs)
+            {
+                _msgs.Add(new MessageDTO
+                {
+                    Contents = msg.Contents,
+                    Id = msg.Id,
+                    IsOpened = msg.IsOpened,
+                    ReciverId = msg.ReciverId,
+                    SenderId = msg.SenderId,
+                    Title = msg.Title,
+                    Sender=msg.Sender,
+                });
+            }
+            return _msgs;
+        }
         [HttpGet]
         [Route("GetUsers/{id?}")]
         public IActionResult GetUsers(int id=-1)
         {
             if(id==-1)
             {
-                var users = db.Users.ToList();
+                var users = db.Users.Include(u=>u.Messages).ToList();
                 users.Reverse();
                 return Ok(users);
             }
-            UserDTO user=db.Users.FirstOrDefault(x => x.Id==id);
+            User user=db.Users.FirstOrDefault(x => x.Id==id);
             if (user == null)
                 return BadRequest("Not found User");
 
             return Ok(user);
         }
+   
+
 
         [HttpGet]
         [Route("GetUsersByRole/{role}")]
@@ -47,12 +66,36 @@ namespace OmegaProject.Controllers
             return Ok(users);
         }
 
-      
+        [HttpGet]
+        [Route("GetFreindsByUser/{id}")]
+        public IActionResult GetUsersByGroup(int id)
+        {
+            var usersRes = new List<User>();
+            var usersId=new List<int>();    
+            //get all groups that referenc to user
+            var ugs = db.UsersGroups.Where(g => g.UserId == id).ToList();
+            //28 29 
+            //get usres id that in same group user
+            db.UsersGroups.Where(ug=>ug.UserId!=id).ToList().ForEach(ug =>
+            {
+                ugs.ForEach(g =>
+                {
+                    if(g.GroupId==ug.GroupId)
+                        usersId.Add(ug.UserId);
+                });
+            });
+            usersId.ForEach(id =>
+            {
+                usersRes.Add(db.Users.FirstOrDefault(f=>f.Id==id));
+            });
+            return Ok(usersRes);
+        }
+
 
 
         [HttpPost]
         [Route("PostUser")]
-        public IActionResult GetUsers([FromBody] UserDTO user)
+        public IActionResult GetUsers([FromBody] User user)
         {
             var temp=db.Users.FirstOrDefault(x => x.IdCard==user.IdCard);
             if(temp!=null)
@@ -78,7 +121,7 @@ namespace OmegaProject.Controllers
 
         [HttpPut]
         [Route("EditUser")]
-        public IActionResult EditUser([FromBody] UserDTO user)
+        public IActionResult EditUser([FromBody] User user)
         {
             //check if user Existed
             var temp = db.Users.FirstOrDefault(x => x.Id == user.Id);

@@ -17,6 +17,17 @@ namespace OmegaProject.Controllers
         {
             this.db = db;
         }
+
+        [HttpGet]
+        [Route("GetGroupsByUserId/{id}")]
+        public IActionResult GetGroupes(int id)
+        {
+            db.Groups.Include(g => g.Course).ToList().ForEach(g => { 
+            });
+            return Ok(.ToList());
+        }
+
+
         [HttpGet]
         [Route("GetGroups")]
         public IActionResult GetGroupes()

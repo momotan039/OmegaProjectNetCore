@@ -57,6 +57,7 @@ namespace OmegaProject.Controllers
         {
             return Ok(db.UsersGroups.ToList());
         }
+
         [HttpDelete]
         [Route("DeleteUserGroups/{id}")]
         public IActionResult GetUsers(int id)

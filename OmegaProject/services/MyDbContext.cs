@@ -8,7 +8,7 @@ namespace OmegaProject.services
     {
         //These Objects will connecting with database table by names
         //      ------     so if change object name ,it will not recognize them     -------
-        public DbSet<UserDTO> Users { get; set; }
+        public DbSet<User> Users { get; set; }
         public DbSet<Role> Role { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<Course> Courses { get; set; }
@@ -19,9 +19,15 @@ namespace OmegaProject.services
         {
 
         }
+      
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-           
+            //// הגדרת המפתחות הזרים
+            
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Sender)
+                .WithMany(u => u.Messages)
+                .HasForeignKey(m=>m.SenderId);
         }
 
         }

@@ -31,13 +31,18 @@ namespace OmegaProject
 
             //Create Connection to DataBase By String Connection
             services.AddDbContext<MyDbContext>(
-                o=>o.UseSqlServer(Configuration.GetConnectionString("OmegaDbConnectionString")));
+                o => o.UseSqlServer(Configuration.GetConnectionString("OmegaDbConnectionString")));
 
             //Configure cors in service
             services.AddCors(option => option.AddPolicy("myPolicy", builder =>
             {
                 builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
             }));
+            //to fix json lenth depth
+            services.AddControllersWithViews()
+    .AddNewtonsoftJson(options =>
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -48,7 +53,7 @@ namespace OmegaProject
                 app.UseDeveloperExceptionPage();
             }
 
-          
+
 
             app.UseHttpsRedirection();
 
@@ -64,7 +69,8 @@ namespace OmegaProject
                 endpoints.MapControllers();
             });
 
-           
+
         }
+
     }
 }
