@@ -1,4 +1,6 @@
-﻿namespace OmegaProject.DTO
+﻿using System;
+
+namespace OmegaProject.DTO
 {
     public class MessageDTO
     {
@@ -9,7 +11,7 @@
         public int SenderId { get; set; }
         public int ReciverId { get; set; }
         public bool IsOpened { get; set; }
-
+        public DateTime SendingDate { get { return SendingDate; } set { SendingDate = DateTime.Now; } }
         public  User Sender { get; set; }
     }
 }

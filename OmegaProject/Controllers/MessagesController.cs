@@ -25,6 +25,31 @@ namespace OmegaProject.Controllers
             db.SaveChanges();
             return  Ok("Message Sent Succsessfully");
         }
+
+        [HttpPost]
+        [Route("SendMessageByGroup")]
+        public IActionResult SendMessageToGroup([FromBody] MessageGroupDTO msg)
+        {
+            //get id group 
+            //get all users in current group
+            //send msg to these users
+            int gId = msg.GroupId;
+            db.UsersGroups.Include(ug => ug.User).Where(u => u.GroupId == gId).ToList().ForEach(u =>
+              {
+                  var m = new Message()
+                  {
+                      Contents = msg.Contents,
+                      ReciverId=u.User.Id,
+                      SenderId=msg.SenderId,
+                      Title = msg.Title,
+                  };
+                  db.Add(m);
+                  db.SaveChanges();
+              });
+            
+            return Ok("Messages Sent Succsessfully");
+        }
+
         [HttpPut]
         [Route("ChangeStatusMessage")]
         public IActionResult ChangeStatusMessage([FromBody] Message msg)

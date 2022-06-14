@@ -12,6 +12,9 @@ namespace OmegaProject.DTO
         public string Phone { get; set; }
         public int Role { get; set; }
         public string IdCard { get; set; }
+
+        public int? GroupId { get; set; }
+
         public virtual List<Message> Messages { get; set; }
     }
 

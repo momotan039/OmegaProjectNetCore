@@ -22,9 +22,10 @@ namespace OmegaProject.Controllers
         [Route("GetGroupsByUserId/{id}")]
         public IActionResult GetGroupes(int id)
         {
-            db.Groups.Include(g => g.Course).ToList().ForEach(g => { 
-            });
-            return Ok(.ToList());
+            //db.Groups.Include(g => g.Course).ToList().ForEach(g => { 
+            //});
+            //return Ok(.ToList());
+            return Ok();
         }
 
 
@@ -32,7 +33,7 @@ namespace OmegaProject.Controllers
         [Route("GetGroups")]
         public IActionResult GetGroupes()
         {
-            return Ok(db.Groups.Include(g=>g.Course).ToList());
+            return Ok(db.Groups.Include(u=>u.Users).Include(g=>g.Course).ToList());
         }
 
 
