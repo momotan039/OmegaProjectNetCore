@@ -24,7 +24,7 @@ namespace OmegaProject.Controllers
         {
             db.Groups.Include(g => g.Course).ToList().ForEach(g => { 
             });
-            return Ok(.ToList());
+            return Ok();
         }
 
 
