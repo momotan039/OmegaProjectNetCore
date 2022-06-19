@@ -22,12 +22,17 @@ namespace OmegaProject.services
       
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //// הגדרת המפתחות הזרים
-            
+            //dclare relartionship one to many without create extra table
             modelBuilder.Entity<Message>()
                 .HasOne(m => m.Sender)
                 .WithMany(u => u.Messages)
                 .HasForeignKey(m=>m.SenderId);
+
+            //modelBuilder.Entity<Group>().
+            //    HasMany(g => g.Users)
+            //    .WithMany(u => u.Groups);
+
+         
         }
 
         }

@@ -41,13 +41,13 @@ namespace OmegaProject.Controllers
         [Route("GetUsers/{id?}")]
         public IActionResult GetUsers(int id=-1)
         {
-            if(id==-1)
+            if (id == -1)
             {
-                var users = db.Users.Include(u=>u.Messages).ToList();
+                var users = db.Users.Include(u => u.Messages).ToList();
                 users.Reverse();
                 return Ok(users);
             }
-            User user=db.Users.FirstOrDefault(x => x.Id==id);
+            User user = db.Users.FirstOrDefault(x => x.Id == id);
             if (user == null)
                 return BadRequest("Not found User");
 
@@ -65,6 +65,23 @@ namespace OmegaProject.Controllers
             
             return Ok(users);
         }
+
+        [HttpGet]
+        [Route("GetUsersByGroupId/{groupId}")]
+        public IActionResult GetUsersByGroupId(int groupId)
+        {
+            var users=new List<User>();
+            //get id user
+            db.Users.ToList().ForEach(u =>
+            {
+                //find id user if exist in UserGroup Table
+                if (db.UsersGroups.FirstOrDefault(ug => ug.UserId == u.Id && ug.GroupId==groupId) != null)
+                //if exist add to users list
+                    users.Add(u);
+            });
+            return Ok(users);
+        }
+
 
         [HttpGet]
         [Route("GetFreindsByUser/{id}")]

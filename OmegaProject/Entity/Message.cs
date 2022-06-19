@@ -1,4 +1,6 @@
-﻿namespace OmegaProject.DTO
+﻿using System;
+
+namespace OmegaProject.DTO
 {
     public class Message
     {
@@ -9,7 +11,7 @@
         public int SenderId { get; set; }
         public int ReciverId { get; set; }
         public bool IsOpened { get; set; }
-
+        public DateTime? SendingDate { get; set; }
         public virtual User Sender { get; set; }
         public virtual User Reciver { get; set; }
 

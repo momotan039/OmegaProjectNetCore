@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
 using OmegaProject.services;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace OmegaProject.Controllers
@@ -22,9 +23,15 @@ namespace OmegaProject.Controllers
         [Route("GetGroupsByUserId/{id}")]
         public IActionResult GetGroupes(int id)
         {
-            db.Groups.Include(g => g.Course).ToList().ForEach(g => { 
+            var groups = new List<Group>();
+            //get all groups that contain this user
+            db.UsersGroups.Where(ug => ug.UserId == id).ToList().ForEach(ug =>
+            {
+                //get group from ug id and insert it to groups list
+                groups.Add(db.Groups.Include(g=>g.Course).First(g=>g.Id==ug.GroupId));
             });
-            return Ok();
+           
+            return Ok(groups);
         }
 
 
@@ -43,6 +50,7 @@ namespace OmegaProject.Controllers
             var temp = db.Groups.FirstOrDefault(x => x.Name == group.Name);
             if (temp != null)
                 return BadRequest("Faild Added ...This Group Exist !!");
+            //group.OpeningDate= System.DateTime.Now;
             db.Groups.Add(group);
             db.SaveChanges();
             return Ok("Added Successfully");
