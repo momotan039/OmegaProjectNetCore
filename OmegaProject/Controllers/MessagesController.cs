@@ -38,13 +38,17 @@ namespace OmegaProject.Controllers
             int gId = msg.GroupId;
             db.UsersGroups.Include(ug => ug.User).Where(u => u.GroupId == gId).ToList().ForEach(u =>
               {
+                  //datetime without seconds
+                  var dt2 = System.DateTime.Now;
+                  var dt = new System.DateTime(dt2.Year, dt2.Month, dt2.Day, dt2.Hour, dt2.Minute, 0);
+
                   var m = new Message()
                   {
                       Contents = msg.Contents,
                       ReciverId=u.User.Id,
                       SenderId=msg.SenderId,
                       Title = msg.Title,
-                      SendingDate = System.DateTime.Now,
+                      SendingDate = dt,
                   };
                   db.Add(m);
                   db.SaveChanges();
@@ -69,7 +73,22 @@ namespace OmegaProject.Controllers
         [Route("GetMessagesBySender/{id}")]
         public IActionResult GetMessagesBySender(int id)
         {
-            var msgs = db.Messages.Where(msg => msg.SenderId == id).ToList();
+            var user = db.Users.FirstOrDefault(d => d.Id == id);
+            List<Message> msgs = null;
+            if (user.Role == 1)
+                
+                msgs = db.Messages
+                    //GroupBy(x => new { x.SenderId, x.Title, x.Contents, x.SendingDate })
+                    .GroupBy(x => new { x.Title,x.Contents,x.SenderId,x.SendingDate })
+                    .Select(r => new Message
+                    {
+                        SenderId=r.Key.SenderId,
+                        Contents=r.Key.Contents,
+                        Title=r.Key.Title,
+                        SendingDate=r.Key.SendingDate,
+                    }).ToList();
+            else
+                msgs = db.Messages.Where(msg => msg.SenderId == id).ToList();
             if (msgs.Count == 0)
                 return BadRequest("Not found Messages!!");
             return Ok(msgs);
@@ -79,12 +98,7 @@ namespace OmegaProject.Controllers
         [Route("GetMessagesByReciver/{id}")]
         public IActionResult GetMessagesByReciver(int id)
         {
-            var user=db.Users.FirstOrDefault(d=>d.Id==id);
-            List<Message> msgs = null;
-            if(user.Role==1)
-                msgs=db.Messages.Include(msg => msg.Sender).Where(x => x.ReciverId == id).ToList();
-            else
-             msgs = db.Messages.Include(msg => msg.Sender).Where(x => x.ReciverId == id).ToList();
+            var msgs = db.Messages.Include(msg => msg.Sender).Where(x => x.ReciverId == id).ToList();
             if (msgs.Count == 0)
                 return BadRequest("Not found Messages!!");
             return Ok(msgs);
