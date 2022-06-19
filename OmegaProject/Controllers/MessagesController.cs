@@ -73,6 +73,7 @@ namespace OmegaProject.Controllers
             if (msgs.Count == 0)
                 return BadRequest("Not found Messages!!");
             return Ok(msgs);
+
         }
         [HttpGet]
         [Route("GetMessagesByReciver/{id}")]

@@ -30,7 +30,6 @@ namespace OmegaProject.Controllers
                 //get group from ug id and insert it to groups list
                 groups.Add(db.Groups.Include(g=>g.Course).First(g=>g.Id==ug.GroupId));
             });
-           
             return Ok(groups);
         }
 
