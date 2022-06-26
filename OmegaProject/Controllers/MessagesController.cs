@@ -18,6 +18,18 @@ namespace OmegaProject.Controllers
         {
             db = _db;
         }
+        //cannot remove message due to its will remove in a nother user
+        //[HttpDelete]
+        //[Route("DeleteMessage/{id}")]
+        //public IActionResult DeleteMessage(int id)
+        //{
+        //    var msg = db.Messages.FirstOrDefault(d=>d.Id==id);
+        //    if (msg == null)
+        //        return BadRequest("Message Not Found");
+        //    db.Messages.Remove(msg);
+        //    return Ok("Message Deleted Successfully");
+        //}
+
         [HttpPost]
        [Route("SendMessage")]
        public IActionResult SendMessage([FromBody] Message msg)
