@@ -12,6 +12,7 @@ namespace OmegaProject.DTO
         public int ReciverId { get; set; }
         public bool IsOpened { get; set; }
         public DateTime? SendingDate { get; set; }
+
         public virtual User Sender { get; set; }
         public virtual User Reciver { get; set; }
 

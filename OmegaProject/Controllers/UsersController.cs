@@ -71,14 +71,12 @@ namespace OmegaProject.Controllers
         public IActionResult GetUsersByGroupId(int groupId)
         {
             var users=new List<User>();
-            //get id user
-            db.Users.ToList().ForEach(u =>
-            {
-                //find id user if exist in UserGroup Table
-                if (db.UsersGroups.FirstOrDefault(ug => ug.UserId == u.Id && ug.GroupId==groupId) != null)
-                //if exist add to users list
-                    users.Add(u);
-            });
+           
+                db.UsersGroups.Include(ug=>ug.User).Where(ug => ug.GroupId == groupId).ToList().ForEach(ug =>
+                {
+                    users.Add(ug.User);
+                });
+
             return Ok(users);
         }
 
@@ -108,7 +106,26 @@ namespace OmegaProject.Controllers
             return Ok(usersRes);
         }
 
+        [HttpGet]
+        [Route("GetUsersNotInThisGroup/{groupId}")]
+        public IActionResult GetUsersNotInThisGroup(int groupId)
+        {
+            var users = new List<User>();
+            var _users = new List<User>();
+            //get users in this group
+            db.UsersGroups.Include(ug => ug.User).Where(ug => ug.GroupId == groupId).ToList().ForEach(ug =>
+            {
+                _users.Add(ug.User);
+            });
 
+            db.Users.Where(u=>u.Role!=1).ToList().ForEach(u =>
+            {
+                //check if user is not in current group
+                if (!_users.Contains(u))
+                    users.Add(u);
+            });
+            return Ok(users);
+        }
 
         [HttpPost]
         [Route("PostUser")]

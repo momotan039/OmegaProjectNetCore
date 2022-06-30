@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OmegaProject.DTO;
 using OmegaProject.services;
 using System.Linq;
 
@@ -22,6 +23,17 @@ namespace OmegaProject.Controllers
         {
             var grades = db.Grades.Include(f => f.Group).Include(f=>f.Student).ToList();
             return Ok(grades);
+        }
+
+        [HttpPost]
+        [Route("SendGrade")]
+        public IActionResult SendGrade([FromBody] Grade g)
+        {
+            if (g == null)
+                return BadRequest("Faild saving Grade");
+            db.Grades.Add(g);
+            db.SaveChanges();
+            return Ok("Grade saved Succecfully");    
         }
     }
 }

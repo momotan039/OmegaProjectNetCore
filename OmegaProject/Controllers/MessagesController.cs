@@ -88,7 +88,7 @@ namespace OmegaProject.Controllers
             var user = db.Users.FirstOrDefault(d => d.Id == id);
             List<Message> msgs = null;
             if (user.Role == 1)
-                
+             
                 msgs = db.Messages
                     //GroupBy(x => new { x.SenderId, x.Title, x.Contents, x.SendingDate })
                     .GroupBy(x => new { x.Title,x.Contents,x.SenderId,x.SendingDate })
@@ -100,9 +100,11 @@ namespace OmegaProject.Controllers
                         SendingDate=r.Key.SendingDate,
                     }).ToList();
             else
-                msgs = db.Messages.Where(msg => msg.SenderId == id).ToList();
+                msgs = db.Messages.Include(msg=>msg.Reciver).Where(msg => msg.SenderId == id).ToList();
             if (msgs.Count == 0)
                 return BadRequest("Not found Messages!!");
+
+            msgs.Reverse();
             return Ok(msgs);
 
         }
@@ -111,8 +113,10 @@ namespace OmegaProject.Controllers
         public IActionResult GetMessagesByReciver(int id)
         {
             var msgs = db.Messages.Include(msg => msg.Sender).Where(x => x.ReciverId == id).ToList();
+            
             if (msgs.Count == 0)
                 return BadRequest("Not found Messages!!");
+            msgs.Reverse();
             return Ok(msgs);
         }
 

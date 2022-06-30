@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
 using OmegaProject.services;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace OmegaProject.Controllers
@@ -52,19 +54,29 @@ namespace OmegaProject.Controllers
             return Ok("Editing Successfully");
         }
         [HttpGet]
-        [Route("GetUserGroups")]
-        public IActionResult GetUsers()
+        [Route("GetUserGroups/{groupId?}")]
+        public IActionResult GetUsers(int groupId=-1)
         {
+            if(groupId==-1)
             return Ok(db.UsersGroups.ToList());
+
+            var usersGroups = new List<UserGroup>();
+            db.UsersGroups.Include(ug => ug.User).Where(ug => ug.GroupId == groupId).ToList().ForEach(ug =>
+            {
+                usersGroups.Add(ug);
+            });
+
+            return Ok(usersGroups);
         }
 
         [HttpDelete]
-        [Route("DeleteUserGroups/{id}")]
-        public IActionResult GetUsers(int id)
+        [Route("DeleteUserFromGroup/{id}")]
+        public IActionResult DeleteUserFromGroup(int id)
         {
             var ug = db.UsersGroups.ToList().FirstOrDefault(u => u.Id == id);
             if (ug == null)
-                return BadRequest("This GroupUser Not Exist");
+                return BadRequest("This User Not Exist in current Group");
+
             db.UsersGroups.Remove(ug);
             db.SaveChanges();
             return Ok("Deleting Successfully");
