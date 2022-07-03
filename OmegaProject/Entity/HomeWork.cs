@@ -10,7 +10,7 @@ namespace OmegaProject.Entity
         public string Contents { get; set; }
         public string FilesPath { get; set; }
         public int GroupId { get; set; }
-        public DateTime dateTime { get; set; }
+        public DateTime SendingDate { get; set; }
         public virtual Group Group { get; set; }
     }
 }

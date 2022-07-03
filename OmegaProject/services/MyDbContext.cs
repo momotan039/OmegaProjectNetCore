@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
+using OmegaProject.Entity;
 
 namespace OmegaProject.services
 {
@@ -15,6 +16,7 @@ namespace OmegaProject.services
         public DbSet<Grade> Grades { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<UserGroup> UsersGroups { get; set; }
+        public DbSet<HomeWork> HomeWorks { get; set; }
         public MyDbContext(DbContextOptions dbContextOption):base(dbContextOption)
         {
 

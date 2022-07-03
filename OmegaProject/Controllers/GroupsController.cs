@@ -21,7 +21,7 @@ namespace OmegaProject.Controllers
 
         [HttpGet]
         [Route("GetGroupsByUserId/{id}")]
-        public IActionResult GetGroupes(int id)
+        public IActionResult GetGroupsByUserId(int id)
         {
             var groups = new List<Group>();
             //get all groups that contain this user
@@ -29,6 +29,20 @@ namespace OmegaProject.Controllers
             {
                 //get group from ug id and insert it to groups list
                 groups.Add(db.Groups.Include(g=>g.Course).First(g=>g.Id==ug.GroupId));
+            });
+            return Ok(groups);
+        }
+
+        [HttpGet]
+        [Route("GetGroupsByCourseId/{id}")]
+        public IActionResult GetGroupsByCourseId(int id)
+        {
+            var groups = new List<Group>();
+            //get all groups that Teaching this Topic
+            db.UsersGroups.Where(ug => ug.UserId == id).ToList().ForEach(ug =>
+            {
+                //get group from ug id and insert it to groups list
+                groups.Add(db.Groups.Include(g => g.Course).First(g => g.Id == ug.GroupId));
             });
             return Ok(groups);
         }

@@ -52,7 +52,7 @@ namespace OmegaProject.Controllers
                 return Ok(db.Courses.ToList());
             else
             {
-                c = db.Courses.ToList().FirstOrDefault(f => f.Id == id);
+                c = db.Courses.Include(i=>i.groups).ToList().FirstOrDefault(f => f.Id == id);
             }
             if (c == null)
                 return BadRequest("Course Not Found !!");
