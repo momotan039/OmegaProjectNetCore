@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
 using OmegaProject.services;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace OmegaProject.Controllers
@@ -14,9 +17,11 @@ namespace OmegaProject.Controllers
     {
 
         MyDbContext db;
-        public GroupsController(MyDbContext db)
+        private readonly IHostingEnvironment hosting;
+        public GroupsController(MyDbContext db,IHostingEnvironment hosting)
         {
             this.db = db;
+            this.hosting = hosting;
         }
 
         [HttpGet]
@@ -78,6 +83,26 @@ namespace OmegaProject.Controllers
             if (temp == null)
                 return BadRequest("Faild Deleted ...This Group not Exist !!");
 
+
+            //delete HomeWork Files that Releated to this Group
+            var path = hosting.WebRootPath + "\\HomeWork" + "\\Files"+"\\"+id;
+            try
+            {
+                if (Directory.Exists(path))
+                {
+                    Directory.Delete(path, true);
+                }
+            }
+            catch (Exception r)
+            {
+                return BadRequest(r.Message);
+            }
+           
+            //foreach (var file in Directory.GetFiles(imagesFolder))
+            //{
+            //    System.IO.File.Delete(file);
+            //}
+            //delete this group
             db.Groups.Remove(temp);
             db.SaveChanges();
             return Ok("Deleted Successfully");

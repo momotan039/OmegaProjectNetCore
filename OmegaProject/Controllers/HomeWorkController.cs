@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using OmegaProject.DTO;
 using OmegaProject.Entity;
 using OmegaProject.services;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -26,7 +27,7 @@ namespace OmegaProject.Controllers
 
         [HttpPost]
         [Route("SendHomeWork")]
-        public IActionResult SendHomeWork(IFormFile files)
+        public IActionResult SendHomeWork(IFormFile[] files)
         {
             string path = Path.Combine(hosting.WebRootPath, "HomeWork",
                    "Files");
@@ -38,31 +39,46 @@ namespace OmegaProject.Controllers
             homeWork.TeacherId = int.Parse(HttpContext.Request.Form["teacherId"]);
             homeWork.SendingDate = System.DateTime.Now;
 
-            //get uploded files path
+            //get paths of uploaded files
             if (files != null)
             {
-                path = Path.Combine(hosting.WebRootPath, "HomeWork",
-                    "Files", $"{homeWork.GroupId}", $"{homeWork.TeacherId}", files.FileName);
-                homeWork.FilesPath = path;
+                Init_Group_Teacher_Folders(path, homeWork);
+                foreach (var file in files)
+                {
+                    path = Path.Combine(hosting.WebRootPath, "HomeWork",
+                    "Files", $"{homeWork.GroupId}", $"{homeWork.TeacherId}", file.FileName);
+                    homeWork.FilesPath += path+"\n";
+                }
             }
 
-           
+            // if user Uploaded files save it
+            var paths = homeWork.FilesPath.Split('\n').ToArray();
+            int index = 0;
+            try
+            {
+                foreach (var file in files)
+                {
+                    using (var fs = new FileStream(paths[index++], FileMode.Create))
+                    {
+                        if (file != null)
+                        {
+                            file.CopyTo(fs);
+                        }
+                    }
+                }
+            }
+            catch (Exception r)
+            {
+                return BadRequest(r.Message);
+            }
+
             //save homework to database
             db.HomeWorks.Add(homeWork);
             db.SaveChanges();
-
-
-            // if user Uploaded files save it
-            if (files != null)
-            {
-                CheckExisted_Group_Teacher_Folders(path, homeWork);
-                files.CopyTo(new FileStream(path, FileMode.Create));
-            }
-
             return Ok("HomeWorkSaved Successfully Successfully!!");
         }
 
-        private void CheckExisted_Group_Teacher_Folders(string path, HomeWork homeWork)
+        private void Init_Group_Teacher_Folders(string path, HomeWork homeWork)
         {
             //check if exist Group id folder adn create it
             if (!Directory.Exists(path + $"\\{homeWork.GroupId}"))
