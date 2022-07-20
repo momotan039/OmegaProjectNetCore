@@ -17,8 +17,8 @@ namespace OmegaProject.Controllers
     {
 
         MyDbContext db;
-        private readonly IHostingEnvironment hosting;
-        public GroupsController(MyDbContext db,IHostingEnvironment hosting)
+        private readonly IWebHostEnvironment hosting;
+        public GroupsController(MyDbContext db, IWebHostEnvironment hosting)
         {
             this.db = db;
             this.hosting = hosting;
@@ -71,13 +71,14 @@ namespace OmegaProject.Controllers
             //group.OpeningDate= System.DateTime.Now;
             db.Groups.Add(group);
             db.SaveChanges();
-            return Ok("Added Successfully");
+            return StatusCode(200);
         }
 
         [HttpDelete]
         [Route("DeleteGroup/{id}")]
         public IActionResult DeleteGroup(int id)
         {
+
             //check if user Existed
             var temp = db.Groups.FirstOrDefault(x => x.Id == id);
             if (temp == null)
@@ -105,7 +106,7 @@ namespace OmegaProject.Controllers
             //delete this group
             db.Groups.Remove(temp);
             db.SaveChanges();
-            return Ok("Deleted Successfully");
+            return StatusCode(200);
         }
 
         [HttpPut]
@@ -117,9 +118,11 @@ namespace OmegaProject.Controllers
             if (temp == null)
                 return BadRequest("Faild Editing ...This Group not Exist !!");
             temp.Name = group.Name;
+            temp.ClosingDate = group.ClosingDate;
+            temp.OpeningDate = group.OpeningDate;
             temp.CourseId = group.CourseId;
             db.SaveChanges();
-            return Ok("Editing Successfully");
+            return StatusCode(200);
         }
     }
 }

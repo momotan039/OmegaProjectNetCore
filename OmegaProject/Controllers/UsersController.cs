@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Cors;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
@@ -15,45 +16,24 @@ namespace OmegaProject.Controllers
     public class UsersController : ControllerBase
     {
         public MyDbContext db;
-        public UsersController(MyDbContext _db)
+        private readonly JwtService jwtService;
+
+        public UsersController(MyDbContext _db, JwtService jwtService)
         {
             db = _db;
+            this.jwtService = jwtService;
         }
-         private List<MessageDTO> MyFun(List<Message> msgs)
-        {
-            var _msgs=new List<MessageDTO>();
-            foreach (var msg in msgs)
-            {
-                _msgs.Add(new MessageDTO
-                {
-                    Contents = msg.Contents,
-                    Id = msg.Id,
-                    IsOpened = msg.IsOpened,
-                    ReciverId = msg.ReciverId,
-                    SenderId = msg.SenderId,
-                    Title = msg.Title,
-                    Sender=msg.Sender,
-                });
-            }
-            return _msgs;
-        }
-        [HttpGet]
-        [Route("GetUsers/{id?}")]
-        public IActionResult GetUsers(int id=-1)
-        {
-            if (id == -1)
-            {
-                var users = db.Users.Include(u => u.Messages).ToList();
-                users.Reverse();
-                return Ok(users);
-            }
-            User user = db.Users.FirstOrDefault(x => x.Id == id);
-            if (user == null)
-                return BadRequest("Not found User");
 
-            return Ok(user);
+        [Authorize(Roles ="Admin")]
+        [HttpGet]
+        [Route("GetUsers")]
+        public IActionResult GetUsers()
+        {
+            var users = db.Users.Include(u => u.Messages).ToList();
+            users.Reverse();
+            return Ok(users);
         }
-   
+        
 
 
         [HttpGet]
@@ -131,26 +111,26 @@ namespace OmegaProject.Controllers
         [Route("PostUser")]
         public IActionResult GetUsers([FromBody] User user)
         {
-            var temp=db.Users.FirstOrDefault(x => x.IdCard==user.IdCard);
+            var temp=db.Users.FirstOrDefault(x => x.IdCard==user.IdCard ||x.Email==user.Email);
             if(temp!=null)
-                return BadRequest("Faild Added ...This User Exist !!");
+                return BadRequest("The Id Card or Email associated with the user already exists !!");
             db.Users.Add(user);
             db.SaveChanges();
-            return Ok("Added Successfully");
+            return StatusCode(200);
         }
 
         [HttpDelete]
         [Route("DeleteUser/{id}")]
-        public IActionResult DeleteUser(string id)
+        public IActionResult DeleteUser(int id)
         {
             //check if user Existed
-            var temp = db.Users.FirstOrDefault(x => x.IdCard ==id);
+            var temp = db.Users.FirstOrDefault(x => x.Id==id);
             if (temp == null)
                 return BadRequest("Faild Deleted ...This User not Exist !!");
 
             db.Users.Remove(temp);
             db.SaveChanges();
-            return Ok("Deleted Successfully");
+            return StatusCode(200);
         }
 
         [HttpPut]
@@ -160,7 +140,7 @@ namespace OmegaProject.Controllers
             //check if user Existed
             var temp = db.Users.FirstOrDefault(x => x.Id == user.Id);
             if (temp == null)
-                return BadRequest("Faild Editing ...This User not Exist !!");
+                return NotFound("Faild Editing ...This User not Exist !!");
             temp.Role = user.Role;
             temp.FirstName = user.FirstName;
             temp.LastName = user.LastName;
@@ -169,7 +149,7 @@ namespace OmegaProject.Controllers
             temp.Phone = user.Phone;
             temp.IdCard = user.IdCard;
             db.SaveChanges();
-            return Ok("Editing Successfully");
+            return StatusCode(200);
         }
 
     }

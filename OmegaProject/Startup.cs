@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +23,7 @@ namespace OmegaProject
         {
             services.AddControllers();
 
+          
             //Create Connection to DataBase By String Connection
             services.AddDbContext<MyDbContext>(
                 o => o.UseSqlServer(Configuration.GetConnectionString("OmegaDbConnectionString")));
@@ -31,11 +33,25 @@ namespace OmegaProject
             {
                 builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
             }));
+
             //to fix json lenth depth
-            services.AddControllersWithViews()
-    .AddNewtonsoftJson(options =>
-    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
-);
+            services.AddControllersWithViews().AddNewtonsoftJson(
+                options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+
+            services.AddHttpContextAccessor();
+            //To complete the injection process properly
+            services.AddScoped<JwtService>();
+            //to declare jtw in this configuration
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(x =>
+                            {
+                                x.RequireHttpsMetadata = false;
+                                x.SaveToken = true;
+                                x.TokenValidationParameters = JwtService.TokenValidationParameters;
+                            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -52,6 +68,7 @@ namespace OmegaProject
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
             //Configure cors in http
 

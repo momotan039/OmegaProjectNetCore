@@ -69,7 +69,7 @@ namespace OmegaProject.Controllers
                 return BadRequest("Faild Added ...This Course Exist !!");
             db.Courses.Add(course);
             db.SaveChanges();
-            return Ok("Added Successfully");
+            return StatusCode(200);
         }
 
         [HttpDelete]
@@ -83,7 +83,7 @@ namespace OmegaProject.Controllers
 
             db.Courses.Remove(temp);
             db.SaveChanges();
-            return Ok("Deleted Successfully");
+            return StatusCode(200);
         }
 
         [HttpPut]
@@ -96,7 +96,7 @@ namespace OmegaProject.Controllers
                 return BadRequest("Faild Editing ...This Course not Exist !!");
            temp.Name = course.Name;
             db.SaveChanges();
-            return Ok("Editing Successfully");
+            return StatusCode(200);
         }
     }
 }
