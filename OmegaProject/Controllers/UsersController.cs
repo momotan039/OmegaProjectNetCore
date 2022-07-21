@@ -12,7 +12,8 @@ namespace OmegaProject.Controllers
     [Route("api/[controller]")]
     [ApiController]
     //enable cros
-    [EnableCors("myPolicy")]
+    //[EnableCors("myPolicy")]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         public MyDbContext db;
@@ -24,7 +25,7 @@ namespace OmegaProject.Controllers
             this.jwtService = jwtService;
         }
 
-        [Authorize(Roles ="Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         [Route("GetUsers")]
         public IActionResult GetUsers()
@@ -33,9 +34,18 @@ namespace OmegaProject.Controllers
             users.Reverse();
             return Ok(users);
         }
-        
 
 
+        //[Authorize]
+        //[HttpGet]
+        //[Route("GetUserByToken")]
+        //public IActionResult GetUser()
+        //{
+        //    var user = db.Users.SingleOrDefault(x => x.Id == int.Parse(jwt.GetTokenClaims()));
+        //    return Ok(user);
+        //}
+
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         [Route("GetUsersByRole/{role}")]
         public IActionResult GetUsersByRole(int role)
@@ -109,7 +119,7 @@ namespace OmegaProject.Controllers
 
         [HttpPost]
         [Route("PostUser")]
-        public IActionResult GetUsers([FromBody] User user)
+        public IActionResult PostUsers([FromBody] User user)
         {
             var temp=db.Users.FirstOrDefault(x => x.IdCard==user.IdCard ||x.Email==user.Email);
             if(temp!=null)
