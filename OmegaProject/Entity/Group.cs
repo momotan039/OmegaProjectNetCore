@@ -11,8 +11,7 @@ namespace OmegaProject.DTO
         public DateTime? OpeningDate { get; set; } 
         public DateTime? ClosingDate { get; set; } 
         public virtual Course Course { get; set; }
-
-        //public List<User> Users { get; set; }
+        public virtual ICollection<UserGroup> UserGroups { get; set; }
         //public virtual List<UserGroup> UserRelation { get; set; }
     }
 }

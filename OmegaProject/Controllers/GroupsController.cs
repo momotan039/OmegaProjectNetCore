@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
@@ -13,21 +13,26 @@ namespace OmegaProject.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class GroupsController : ControllerBase
     {
 
         MyDbContext db;
         private readonly IWebHostEnvironment hosting;
-        public GroupsController(MyDbContext db, IWebHostEnvironment hosting)
+        private readonly JwtService jwt;
+
+        public GroupsController(MyDbContext db, IWebHostEnvironment hosting,JwtService jwt)
         {
             this.db = db;
             this.hosting = hosting;
+            this.jwt = jwt;
         }
 
         [HttpGet]
-        [Route("GetGroupsByUserId/{id}")]
-        public IActionResult GetGroupsByUserId(int id)
+        [Route("GetGroupsByUserId")]
+        public IActionResult GetGroupsByUserId()
         {
+            int id = int.Parse(jwt.GetTokenClaims());
             var groups = new List<Group>();
             //get all groups that contain this user
             db.UsersGroups.Where(ug => ug.UserId == id).ToList().ForEach(ug =>
@@ -42,15 +47,12 @@ namespace OmegaProject.Controllers
         [Route("GetGroupsByCourseId/{id}")]
         public IActionResult GetGroupsByCourseId(int id)
         {
-            var groups = new List<Group>();
+            var groups = db.Groups.Where(q=>q.CourseId==id).ToList();
             //get all groups that Teaching this Topic
-            db.UsersGroups.Where(ug => ug.UserId == id).ToList().ForEach(ug =>
-            {
-                //get group from ug id and insert it to groups list
-                groups.Add(db.Groups.Include(g => g.Course).First(g => g.Id == ug.GroupId));
-            });
+            
             return Ok(groups);
         }
+
 
 
         [HttpGet]
@@ -60,14 +62,23 @@ namespace OmegaProject.Controllers
             return Ok(db.Groups.Include(g=>g.Course).ToList());
         }
 
+        [HttpGet]
+        [Route("GetGroupById/{id}")]
+        public IActionResult GetGroupById(int id)
+        {
+            var g = db.Groups.Include(q=>q.UserGroups).ThenInclude(q=>q.User).ThenInclude(q=>q.Role).SingleOrDefault(x => x.Id == id);
+            if (g == null)
+                return StatusCode(404);
+            return Ok(g);
+        }
 
         [HttpPost]
         [Route("PostGroup")]
         public IActionResult PostGroup([FromBody] Group group)
         {
-            var temp = db.Groups.FirstOrDefault(x => x.Name == group.Name);
-            if (temp != null)
-                return BadRequest("Faild Added ...This Group Exist !!");
+            //var temp = db.Groups.FirstOrDefault(x => x.Name == group.Name);
+            //if (temp != null)
+            //    return BadRequest("Faild Added ...This Group Exist !!");
             //group.OpeningDate= System.DateTime.Now;
             db.Groups.Add(group);
             db.SaveChanges();

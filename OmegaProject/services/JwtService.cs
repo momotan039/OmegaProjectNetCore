@@ -11,7 +11,7 @@ namespace OmegaProject.services
     {
         private static string JwtSecretSign = "ProEMLh5e_qnzdNUQrqdHPgp";
         private static string JwtSecretDecrypt = "ProEMLh5e_qnzdNU";
-        private TimeSpan TokenNumMinutesToExtend = new TimeSpan(0, 0,5);
+        private TimeSpan TokenNumMinutesToExtend = new TimeSpan(2, 0,0);
         private TimeSpan TokenMaxMinutesSession = new TimeSpan(2, 0, 0);
 
         public const string TokenPrimaryKey = "UserId";
@@ -54,7 +54,7 @@ namespace OmegaProject.services
                 }),
                 Expires = expired,
                 SigningCredentials = new SigningCredentials(JwtSymmetricSecurityIssuerSigningKey, SecurityAlgorithms.HmacSha512),
-                EncryptingCredentials = new EncryptingCredentials(JwtSymmetricSecurityTokenDecryptionKey, SecurityAlgorithms.Aes128KW, SecurityAlgorithms.Aes128CbcHmacSha256)
+                //EncryptingCredentials = new EncryptingCredentials(JwtSymmetricSecurityTokenDecryptionKey, SecurityAlgorithms.Aes128KW, SecurityAlgorithms.Aes128CbcHmacSha256)
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();

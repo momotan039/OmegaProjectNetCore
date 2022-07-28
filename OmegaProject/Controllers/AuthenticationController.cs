@@ -28,7 +28,7 @@ namespace OmegaProject.Controllers
 
                 if (user == null)
                 return Unauthorized("This User Not Exist");//401=>UNAUTHENTICATED
-            return Ok(jwt.GenerateToken(user.Id + "", user.Role == 1 ? true : false));
+            return Ok(jwt.GenerateToken(user.Id + "", user.RoleId == 1 ? true : false));
         }
         [Authorize]
         [HttpGet]

@@ -1,5 +1,6 @@
 ﻿
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
@@ -11,12 +12,16 @@ namespace OmegaProject.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class MessagesController : ControllerBase
     {
         public MyDbContext db;
-        public MessagesController(MyDbContext _db)
+        private readonly JwtService jwt;
+
+        public MessagesController(MyDbContext _db, JwtService jwt)
         {
             db = _db;
+            this.jwt = jwt;
         }
         //cannot remove message due to its will remove in a nother user
         //[HttpDelete]
@@ -37,7 +42,7 @@ namespace OmegaProject.Controllers
             msg.SendingDate = System.DateTime.Now;
             db.Add(msg);
             db.SaveChanges();
-            return  Ok("Message Sent Succsessfully");
+            return  Ok(StatusCode(200));
         }
 
         [HttpPost]
@@ -59,7 +64,6 @@ namespace OmegaProject.Controllers
                       Contents = msg.Contents,
                       ReciverId=u.User.Id,
                       SenderId=msg.SenderId,
-                      Title = msg.Title,
                       SendingDate = dt,
                   };
                   db.Add(m);
@@ -81,42 +85,43 @@ namespace OmegaProject.Controllers
             return Ok("Message Changed Status Succsessfully");
         }
 
+
         [HttpGet]
-        [Route("GetMessagesBySender/{id}")]
-        public IActionResult GetMessagesBySender(int id)
+        [Route("GetMessagesBySender")]
+        public IActionResult GetMessagesBySender()
         {
+            int id = int.Parse(jwt.GetTokenClaims());
             var user = db.Users.FirstOrDefault(d => d.Id == id);
             List<Message> msgs = null;
-            if (user.Role == 1)
+            if (user.RoleId == 1)
              
                 msgs = db.Messages
                     //GroupBy(x => new { x.SenderId, x.Title, x.Contents, x.SendingDate })
-                    .GroupBy(x => new { x.Title,x.Contents,x.SenderId,x.SendingDate })
+                    .GroupBy(x => new { x.Contents,x.SenderId,x.SendingDate })
                     .Select(r => new Message
                     {
                         SenderId=r.Key.SenderId,
                         Contents=r.Key.Contents,
-                        Title=r.Key.Title,
                         SendingDate=r.Key.SendingDate,
                     }).ToList();
             else
                 msgs = db.Messages.Include(msg=>msg.Reciver).Where(msg => msg.SenderId == id).ToList();
-            if (msgs.Count == 0)
-                return BadRequest("Not found Messages!!");
 
             msgs.Reverse();
             return Ok(msgs);
 
         }
+
         [HttpGet]
-        [Route("GetMessagesByReciver/{id}")]
-        public IActionResult GetMessagesByReciver(int id)
+        [Route("GetMessagesByReciver/{idReciver}")]
+        public IActionResult GetMessagesByReciver(int idReciver)
         {
-            var msgs = db.Messages.Include(msg => msg.Sender).Where(x => x.ReciverId == id).ToList();
-            
-            if (msgs.Count == 0)
-                return BadRequest("Not found Messages!!");
-            msgs.Reverse();
+            int id = int.Parse(jwt.GetTokenClaims());
+            var msgs = db.Messages.Include(q=>q.Sender).Where(x => 
+            (x.ReciverId == idReciver && x.SenderId == id)||
+            (x.ReciverId == id && x.SenderId == idReciver)
+            ).ToList();
+            //msgs.Reverse();
             return Ok(msgs);
         }
 
