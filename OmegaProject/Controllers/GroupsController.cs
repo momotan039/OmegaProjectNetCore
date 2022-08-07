@@ -29,12 +29,25 @@ namespace OmegaProject.Controllers
         }
 
         [HttpGet]
-        [Route("GetGroupsByUserId")]
-        public IActionResult GetGroupsByUserId()
+        [Route("GetGroupsByUserId/{id?}")]
+        public IActionResult GetGroupsByUserId(int id=-1)
         {
-            int id = int.Parse(jwt.GetTokenClaims());
+            if(id==-1)
+             id = int.Parse(jwt.GetTokenClaims());
+
+            var user = db.Users.SingleOrDefault(r => r.Id == id);
+           
             var groups = new List<Group>();
+            if (user.RoleId == 1)
+            {
+                var gs = db.Groups.Include(g => g.Course).ToList();
+                return Ok(gs);
+
+            }
+
             //get all groups that contain this user
+
+
             db.UsersGroups.Where(ug => ug.UserId == id).ToList().ForEach(ug =>
             {
                 //get group from ug id and insert it to groups list

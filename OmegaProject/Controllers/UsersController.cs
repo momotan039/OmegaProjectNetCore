@@ -86,10 +86,15 @@ namespace OmegaProject.Controllers
             var usersRes = new List<User>();
             var usersId=new List<int>();
             int id = int.Parse(jwtService.GetTokenClaims());
+            var user=db.Users.SingleOrDefault(ug=>ug.Id == id);
+
+            if (user.RoleId==1)
+                return Ok(db.Users.Where(u=>u.Id!=id && u.RoleId!=3).ToList());
+           
             //get all groups that referenc to user
             var ugs = db.UsersGroups.Where(g => g.UserId == id).ToList();
-            //28 29 
             //get usres id that in same group user
+
             db.UsersGroups.Where(ug=>ug.UserId!=id).ToList().ForEach(ug =>
             {
                 ugs.ForEach(g =>
@@ -102,6 +107,10 @@ namespace OmegaProject.Controllers
             {
                 usersRes.Add(db.Users.FirstOrDefault(f=>f.Id==id));
             });
+            if (user.RoleId == 2)//get admins if user teacher
+                db.Users.Where(u => u.RoleId == 1).ToList().ForEach((u) => {
+                    usersRes.Add(u);
+                });
             return Ok(usersRes);
         }
 

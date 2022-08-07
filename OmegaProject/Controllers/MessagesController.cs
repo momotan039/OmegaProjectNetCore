@@ -24,54 +24,30 @@ namespace OmegaProject.Controllers
             this.jwt = jwt;
         }
         //cannot remove message due to its will remove in a nother user
-        //[HttpDelete]
-        //[Route("DeleteMessage/{id}")]
-        //public IActionResult DeleteMessage(int id)
-        //{
-        //    var msg = db.Messages.FirstOrDefault(d=>d.Id==id);
-        //    if (msg == null)
-        //        return BadRequest("Message Not Found");
-        //    db.Messages.Remove(msg);
-        //    return Ok("Message Deleted Successfully");
-        //}
+        [HttpDelete]
+        [Route("DeleteMessage/{id}")]
+        public IActionResult DeleteMessage(int id)
+        {
+            var msg = db.Messages.FirstOrDefault(d => d.Id == id);
+            if (msg == null)
+                return NotFound("Message Not Found");
+            db.Messages.Remove(msg);
+            db.SaveChanges();
+            return StatusCode(200);
+        }
 
-        [HttpPost]
+       [HttpPost]
        [Route("SendMessage")]
        public IActionResult SendMessage([FromBody] Message msg)
         {
             msg.SendingDate = System.DateTime.Now;
-            db.Add(msg);
+            db.Messages.Add(msg);
             db.SaveChanges();
-            return  Ok(StatusCode(200));
+            return StatusCode(200);
         }
 
-        [HttpPost]
-        [Route("SendMessageByGroup")]
-        public IActionResult SendMessageToGroup([FromBody] MessageGroupDTO msg)
-        {
-            //get id group 
-            //get all users in current group
-            //send msg to these users
-            int gId = msg.GroupId;
-            db.UsersGroups.Include(ug => ug.User).Where(u => u.GroupId == gId).ToList().ForEach(u =>
-              {
-                  //datetime without seconds
-                  var dt2 = System.DateTime.Now;
-                  var dt = new System.DateTime(dt2.Year, dt2.Month, dt2.Day, dt2.Hour, dt2.Minute, 0);
 
-                  var m = new Message()
-                  {
-                      Contents = msg.Contents,
-                      ReciverId=u.User.Id,
-                      SenderId=msg.SenderId,
-                      SendingDate = dt,
-                  };
-                  db.Add(m);
-                  db.SaveChanges();
-              });
-            
-            return Ok("Messages Sent Succsessfully");
-        }
+       
 
         [HttpPut]
         [Route("ChangeStatusMessage")]

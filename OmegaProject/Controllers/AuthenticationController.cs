@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
 using OmegaProject.services;
 using System.Linq;
@@ -35,7 +36,7 @@ namespace OmegaProject.Controllers
         [Route("GetUserByToken")]
         public IActionResult GetUser()
         {
-            var user = db.Users.SingleOrDefault(x => x.Id == int.Parse(jwt.GetTokenClaims()));
+            var user = db.Users.Include(f=>f.Role).SingleOrDefault(x => x.Id == int.Parse(jwt.GetTokenClaims()));
             return Ok(user);
         }
 

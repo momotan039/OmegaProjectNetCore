@@ -14,5 +14,6 @@ namespace OmegaProject.Entity
 
         public DateTime SendingDate { get; set; }
         public virtual Group Group { get; set; }
+        public virtual User Teacher { get; set; }
     }
 }
