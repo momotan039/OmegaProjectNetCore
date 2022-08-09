@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
@@ -9,6 +10,7 @@ namespace OmegaProject.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class GradesController : ControllerBase
     {
         MyDbContext db;
@@ -33,7 +35,32 @@ namespace OmegaProject.Controllers
                 return BadRequest("Faild saving Grade");
             db.Grades.Add(g);
             db.SaveChanges();
-            return Ok("Grade saved Succecfully");    
+            return Ok();    
+        }
+
+        [HttpDelete]
+        [Route("DeleteGrade")]
+        public IActionResult DeleteGrade([FromBody] Grade g)
+        {
+            db.Grades.Remove(g);
+            db.SaveChanges();
+            return Ok();
+        }
+
+        [HttpPut]
+        [Route("EditGrade")]
+        public IActionResult EditGrades([FromBody] Grade g)
+        {
+            var grade = db.Grades.FirstOrDefault(e => e.Id == g.Id);
+
+            if(grade==null)
+                return NotFound();
+
+            grade.SumGrade = g.SumGrade;
+            grade.StudentId = g.StudentId;
+            grade.GroupID= g.GroupID;
+            grade.Note=g.Note;
+            return Ok(grade);
         }
     }
 }

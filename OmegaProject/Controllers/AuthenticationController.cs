@@ -25,10 +25,13 @@ namespace OmegaProject.Controllers
         [Route("Login")]
         public IActionResult Login([FromBody]UserLogInDTO u)
         {
-            var user=db.Users.SingleOrDefault(x=>x.Email==u.Email && u.Password==x.Password);
+            var user=db.Users
+                .SingleOrDefault(x=>x.Email==u.Email
+                && u.Password==x.Password);
 
                 if (user == null)
                 return Unauthorized("This User Not Exist");//401=>UNAUTHENTICATED
+
             return Ok(jwt.GenerateToken(user.Id + "", user.RoleId == 1 ? true : false));
         }
         [Authorize]
