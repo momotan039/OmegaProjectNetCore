@@ -23,7 +23,8 @@ namespace OmegaProject.Controllers
         public IActionResult GetGroupsbyUserId(int id)
         {
             if (db.Users.FirstOrDefault(u => u.Id == id) == null)
-                return BadRequest("not found User");
+                return NotFound("Not Found User");
+
             var groupsId = new List<int>();
             //get all groups that in
             db.UsersGroups.ToList().ForEach(ug =>
@@ -55,7 +56,7 @@ namespace OmegaProject.Controllers
         {
             var c=db.Courses.FirstOrDefault(u=>u.Id==id);
             if (c == null)
-                return StatusCode(404);
+                return NotFound("Not Found Course");
             return Ok(c);
         }
 
@@ -68,7 +69,7 @@ namespace OmegaProject.Controllers
                 return BadRequest("Faild Added ...This Course Exist !!");
             db.Courses.Add(course);
             db.SaveChanges();
-            return StatusCode(200);
+            return Ok("Course Added Successfully");
         }
 
         [HttpDelete]
@@ -78,24 +79,27 @@ namespace OmegaProject.Controllers
             //check if user Existed
             var temp = db.Courses.FirstOrDefault(x => x.Id == id);
             if (temp == null)
-                return BadRequest("Faild Deleted ...This Course not Exist !!");
+                return NotFound("Faild Deleted ...This Course not Exist !!");
 
             db.Courses.Remove(temp);
             db.SaveChanges();
-            return StatusCode(200);
+            return Ok("Course Deleted Successfully");
         }
 
         [HttpPut]
         [Route("EditCourse")]
         public IActionResult EditCourse([FromBody] Course course)
         {
-            //check if user Existed
+            //check if Course Existed
             var temp = db.Courses.FirstOrDefault(x => x.Id == course.Id);
             if (temp == null)
-                return BadRequest("Faild Editing ...This Course not Exist !!");
-           temp.Name = course.Name;
+                return NotFound("Faild Editing ...This Course not Exist !!");
+            temp=db.Courses.FirstOrDefault(f=>f.Name==course.Name);
+            if (temp != null)
+                return BadRequest("Faild Editing ...Course with same Name Already Exist !!");
+            temp.Name = course.Name;
             db.SaveChanges();
-            return StatusCode(200);
+            return Ok("Course Edited Successfully");
         }
     }
 }

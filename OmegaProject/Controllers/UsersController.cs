@@ -141,10 +141,10 @@ namespace OmegaProject.Controllers
         {
             var temp=db.Users.FirstOrDefault(x => x.IdCard==user.IdCard ||x.Email==user.Email);
             if(temp!=null)
-                return BadRequest("The Id Card or Email associated with the user already exists !!");
+                return BadRequest("The Id Card or Email associated with an existing user !!");
             db.Users.Add(user);
             db.SaveChanges();
-            return StatusCode(200);
+            return Ok("User Added successfully");
         }
 
         [HttpDelete]
@@ -154,11 +154,10 @@ namespace OmegaProject.Controllers
             //check if user Existed
             var temp = db.Users.FirstOrDefault(x => x.Id==id);
             if (temp == null)
-                return BadRequest("Faild Deleted ...This User not Exist !!");
-
+                return NotFound("Faild Deleted ...This User not Exist !!");
             db.Users.Remove(temp);
             db.SaveChanges();
-            return StatusCode(200);
+            return Ok("User Deleted successfully");
         }
 
         [HttpPut]
@@ -177,7 +176,7 @@ namespace OmegaProject.Controllers
             temp.Phone = user.Phone;
             temp.IdCard = user.IdCard;
             db.SaveChanges();
-            return StatusCode(200);
+            return Ok("User Edited successfully");
         }
 
     }

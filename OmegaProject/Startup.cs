@@ -22,7 +22,6 @@ namespace OmegaProject
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-
           
             //Create Connection to DataBase By String Connection
             services.AddDbContext<MyDbContext>(

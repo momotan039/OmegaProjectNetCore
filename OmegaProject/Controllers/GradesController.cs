@@ -23,7 +23,10 @@ namespace OmegaProject.Controllers
         [Route("GetGrades")]
         public IActionResult GetGrades()
         {
-            var grades = db.Grades.Include(f => f.Group).Include(f=>f.Student).ToList();
+            var grades = db.Grades.Include(f => f.Group).
+                Include(f=>f.Student).
+                Include(f=>f.Test).
+                ToList();
             return Ok(grades);
         }
 
@@ -33,18 +36,31 @@ namespace OmegaProject.Controllers
         {
             if (g == null)
                 return BadRequest("Faild saving Grade");
+            var xg = db.Grades.FirstOrDefault(
+                f => f.GroupId == g.GroupId
+            && f.StudentId == g.StudentId
+            && f.TestId == g.TestId
+            );
+
+            if (xg != null)
+                return BadRequest("Current Grade Already Exist For This Student");
+
             db.Grades.Add(g);
             db.SaveChanges();
-            return Ok();    
+            return Ok("Grade Added Successfully");    
         }
 
+
         [HttpDelete]
-        [Route("DeleteGrade")]
-        public IActionResult DeleteGrade([FromBody] Grade g)
+        [Route("DeleteGrade/{id}")]
+        public IActionResult DeleteGrade(int id)
         {
+            var g=db.Grades.First(f => f.Id == id);
+            if(g==null)
+                return NotFound("Not Found Grade");
             db.Grades.Remove(g);
             db.SaveChanges();
-            return Ok();
+            return Ok("Grade Deleted Successfully");
         }
 
         [HttpPut]
@@ -54,13 +70,24 @@ namespace OmegaProject.Controllers
             var grade = db.Grades.FirstOrDefault(e => e.Id == g.Id);
 
             if(grade==null)
-                return NotFound();
+                return BadRequest("Faild Editing");
+
+            //grade = db.Grades.FirstOrDefault(
+            //    f => f.GroupId == g.GroupId
+            //&& f.StudentId == g.StudentId
+            //&& f.TestId == g.TestId
+            //);
+
+            //if (grade != null)
+            //    return BadRequest("Current Grade Already Exist For This Student");
 
             grade.SumGrade = g.SumGrade;
             grade.StudentId = g.StudentId;
-            grade.GroupID= g.GroupID;
+            grade.GroupId= g.GroupId;
             grade.Note=g.Note;
-            return Ok(grade);
+            grade.TestId = g.TestId;
+            db.SaveChanges();
+            return Ok("Grade Added Successfully");
         }
     }
 }

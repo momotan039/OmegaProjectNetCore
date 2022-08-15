@@ -26,7 +26,7 @@ namespace OmegaProject.Controllers
 
             Role role = db.Role.FirstOrDefault(x => x.NumberRole == id);
             if (role == null)
-                return BadRequest("Not found User");
+                return NotFound("Not found Role");
 
             return Ok(role);
         }
