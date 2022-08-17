@@ -87,7 +87,7 @@ namespace OmegaProject.Controllers
         [Route("DeleteUserFromGroup/{id}")]
         public IActionResult DeleteUserFromGroup(int id)
         {
-            var ug = db.UsersGroups.ToList().FirstOrDefault(u => u.Id == id);
+            var ug = db.UsersGroups.FirstOrDefault(u => u.UserId == id);
 
             if (ug == null)
                 return StatusCode(404);

@@ -4,7 +4,8 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://192.168.1.105:18662"
+      "applicationUrl": "http://localhost:18662",
+      "sslPort": 44327
     }
   },
   "profiles": {
@@ -26,20 +27,5 @@
       }
     }
   }
-  //,
-
-  //"Kestrel": {
-
-  //  "Endpoints": {
-
-  //    "Http": {
-
-  //      "Url": "http://192.168.1.13:5003"
-
-  //    }
-
-  //  }
-
-  //}
+  
 }
-//"applicationUrl": "http://localhost:18662",

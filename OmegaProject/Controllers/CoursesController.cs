@@ -25,22 +25,19 @@ namespace OmegaProject.Controllers
             if (db.Users.FirstOrDefault(u => u.Id == id) == null)
                 return NotFound("Not Found User");
 
-            var groupsId = new List<int>();
-            //get all groups that in
-            db.UsersGroups.ToList().ForEach(ug =>
+            //get all realations user-groups
+            var ugs = db.UsersGroups.Include(q=>q.Group).
+                ThenInclude(q=>q.Course).
+                Where(q => q.UserId == id);
+
+            var courses = new List<Course>();
+
+            ugs.ToList().ForEach(ug =>
             {
-                if(ug.UserId==id)
-                    groupsId.Add(ug.GroupId);
+                if(!courses.Contains(ug.Group.Course))
+                    courses.Add(ug.Group.Course);
             });
-            var courses=new List<Course>();
-            db.Groups.ToList().ForEach(g =>
-            {
-                groupsId.ForEach(gId =>
-                {
-                    if (gId == g.Id)
-                        courses.Add(db.Courses.FirstOrDefault(c=>c.Id==g.CourseId));
-                });
-            });
+           
             return Ok(courses);
         }
 

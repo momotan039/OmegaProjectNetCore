@@ -23,14 +23,14 @@ namespace OmegaProject.services
         {
 
         }
-      
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //dclare relartionship one to many without create extra table
+            //dclare relartionship one to many=>User have many messages
             modelBuilder.Entity<Message>()
-                .HasOne(m => m.Sender)
+                .HasOne(m => m.Reciver)
                 .WithMany(u => u.Messages)
-                .HasForeignKey(m => m.SenderId);
+                .HasForeignKey(m => m.ReciverId);
 
             //modelBuilder.Entity<UserGroup>().HasKey(ug=>new
             //{
@@ -48,6 +48,5 @@ namespace OmegaProject.services
             //  .HasForeignKey(ug => ug.GroupId);
 
         }
-
-        }
+    }
 }
