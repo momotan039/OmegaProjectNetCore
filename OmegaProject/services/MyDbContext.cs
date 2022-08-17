@@ -15,6 +15,7 @@ namespace OmegaProject.services
         public DbSet<GroupMessage> GroupMessages { get; set; }
         public DbSet<Course> Courses { get; set; }
         public DbSet<Grade> Grades { get; set; }
+        public DbSet<Test> Tests { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<UserGroup> UsersGroups { get; set; }
         public DbSet<HomeWork> HomeWorks { get; set; }
@@ -22,14 +23,14 @@ namespace OmegaProject.services
         {
 
         }
-      
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //dclare relartionship one to many without create extra table
+            //dclare relartionship one to many=>User have many messages
             modelBuilder.Entity<Message>()
-                .HasOne(m => m.Sender)
+                .HasOne(m => m.Reciver)
                 .WithMany(u => u.Messages)
-                .HasForeignKey(m => m.SenderId);
+                .HasForeignKey(m => m.ReciverId);
 
             //modelBuilder.Entity<UserGroup>().HasKey(ug=>new
             //{
@@ -47,6 +48,5 @@ namespace OmegaProject.services
             //  .HasForeignKey(ug => ug.GroupId);
 
         }
-
-        }
+    }
 }

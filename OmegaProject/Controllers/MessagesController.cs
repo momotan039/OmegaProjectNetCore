@@ -100,6 +100,11 @@ namespace OmegaProject.Controllers
             //msgs.Reverse();
             return Ok(msgs);
         }
-
+        [HttpGet]
+        [Route("GetAll")]
+        public IActionResult GetAll()
+        {
+            return Ok(db.Messages.Include(q=>q.Sender).Include(q => q.Reciver).First());
+        }
     }
 }

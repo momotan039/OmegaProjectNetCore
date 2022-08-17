@@ -30,7 +30,7 @@ namespace OmegaProject.Controllers
                 && u.Password==x.Password);
 
                 if (user == null)
-                return Unauthorized("This User Not Exist");//401=>UNAUTHENTICATED
+                return BadRequest("This User Not Exist");
 
             return Ok(jwt.GenerateToken(user.Id + "", user.RoleId == 1 ? true : false));
         }

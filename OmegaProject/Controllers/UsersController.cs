@@ -62,7 +62,8 @@ namespace OmegaProject.Controllers
         {
             var users=new List<User>();
            
-                db.UsersGroups.Include(ug=>ug.User).Where(ug => ug.GroupId == groupId).ToList().ForEach(ug =>
+                db.UsersGroups.Include(ug=>ug.User).ThenInclude(q=>q.Role).
+                Where(ug => ug.GroupId == groupId).ToList().ForEach(ug =>
                 {
                     users.Add(ug.User);
                 });
@@ -74,7 +75,7 @@ namespace OmegaProject.Controllers
         [Route("GetUsersById/{id}")]
         public IActionResult GetUsersById(int id)
         {
-            var user = db.Users.SingleOrDefault(u => u.Id == id);
+            var user = db.Users.Include(q=>q.Role).SingleOrDefault(u => u.Id == id);
 
             return Ok(user);
         }
@@ -119,17 +120,17 @@ namespace OmegaProject.Controllers
         public IActionResult GetUsersNotInThisGroup(int groupId)
         {
             var users = new List<User>();
-            var _users = new List<User>();
+            var currentUsers = new List<User>();
             //get users in this group
             db.UsersGroups.Include(ug => ug.User).Where(ug => ug.GroupId == groupId).ToList().ForEach(ug =>
             {
-                _users.Add(ug.User);
+                currentUsers.Add(ug.User);
             });
 
             db.Users.Where(u=>u.RoleId!=1).ToList().ForEach(u =>
             {
                 //check if user is not in current group
-                if (!_users.Contains(u))
+                if (!currentUsers.Contains(u))
                     users.Add(u);
             });
             return Ok(users);
@@ -141,10 +142,10 @@ namespace OmegaProject.Controllers
         {
             var temp=db.Users.FirstOrDefault(x => x.IdCard==user.IdCard ||x.Email==user.Email);
             if(temp!=null)
-                return BadRequest("The Id Card or Email associated with the user already exists !!");
+                return BadRequest("The Id Card or Email associated with an existing user !!");
             db.Users.Add(user);
             db.SaveChanges();
-            return StatusCode(200);
+            return Ok("User Added successfully");
         }
 
         [HttpDelete]
@@ -154,11 +155,10 @@ namespace OmegaProject.Controllers
             //check if user Existed
             var temp = db.Users.FirstOrDefault(x => x.Id==id);
             if (temp == null)
-                return BadRequest("Faild Deleted ...This User not Exist !!");
-
+                return NotFound("Faild Deleted ...This User not Exist !!");
             db.Users.Remove(temp);
             db.SaveChanges();
-            return StatusCode(200);
+            return Ok("User Deleted successfully");
         }
 
         [HttpPut]
@@ -177,7 +177,7 @@ namespace OmegaProject.Controllers
             temp.Phone = user.Phone;
             temp.IdCard = user.IdCard;
             db.SaveChanges();
-            return StatusCode(200);
+            return Ok("User Edited successfully");
         }
 
     }

@@ -27,7 +27,7 @@ namespace OmegaProject.Controllers
             }
             //Add User
             db.SaveChanges();
-            return StatusCode(200);
+             return Ok("User Added To Group Successfully");
         }
 
         [HttpPost]
@@ -37,22 +37,22 @@ namespace OmegaProject.Controllers
             //Check if User Exist
             var user=db.Users.ToList().FirstOrDefault(u => u.Id == uG.UserId);
             if (user == null)
-                return StatusCode(404);
+                return NotFound("User Not Found");
 
             //Check if Group Exist
             var group = db.Groups.ToList().FirstOrDefault(g => g.Id == uG.GroupId);
             if (group == null)
-                return StatusCode(404);
+                return NotFound("Group Not Found");
 
             //Check if UserGroup Exist
             var temp = db.UsersGroups.ToList().FirstOrDefault(t=>t.UserId==user.Id && t.GroupId==group.Id);
             if (temp != null)
-                return StatusCode(404); 
+                return NotFound("User Already in Current Group"); 
 
             //Add User
             db.UsersGroups.Add(uG);
             db.SaveChanges();
-            return StatusCode(200);
+            return Ok("User Added To Group Successfully");
         }
         [HttpPut]
         [Route("EditUserToGroup")]
@@ -65,7 +65,7 @@ namespace OmegaProject.Controllers
             ug.GroupId = uG.GroupId;
             ug.UserId = uG.UserId;
             db.SaveChanges();
-            return Ok("Editing Successfully");
+            return Ok("Edited successfully");
         }
         [HttpGet]
         [Route("GetUserGroups/{groupId?}")]
@@ -87,13 +87,13 @@ namespace OmegaProject.Controllers
         [Route("DeleteUserFromGroup/{id}")]
         public IActionResult DeleteUserFromGroup(int id)
         {
-            var ug = db.UsersGroups.ToList().FirstOrDefault(u => u.Id == id);
+            var ug = db.UsersGroups.FirstOrDefault(u => u.UserId == id);
 
             if (ug == null)
                 return StatusCode(404);
             db.UsersGroups.Remove(ug);
             db.SaveChanges();
-            return StatusCode(200);
+            return Ok("Deleted successfully");
         }
 
     }

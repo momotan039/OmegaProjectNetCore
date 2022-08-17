@@ -21,7 +21,7 @@ namespace OmegaProject.Controllers
         private readonly IWebHostEnvironment hosting;
         private readonly JwtService jwt;
 
-        public GroupsController(MyDbContext db, IWebHostEnvironment hosting,JwtService jwt)
+        public GroupsController(MyDbContext db, IWebHostEnvironment hosting, JwtService jwt)
         {
             this.db = db;
             this.hosting = hosting;
@@ -30,13 +30,16 @@ namespace OmegaProject.Controllers
 
         [HttpGet]
         [Route("GetGroupsByUserId/{id?}")]
-        public IActionResult GetGroupsByUserId(int id=-1)
+        public IActionResult GetGroupsByUserId(int id = -1)
         {
-            if(id==-1)
-             id = int.Parse(jwt.GetTokenClaims());
+            if (id == -1)
+                id = int.Parse(jwt.GetTokenClaims());
 
             var user = db.Users.SingleOrDefault(r => r.Id == id);
-           
+
+            if (user == null)
+                return NotFound("Not Found User");
+
             var groups = new List<Group>();
             if (user.RoleId == 1)
             {
@@ -51,7 +54,7 @@ namespace OmegaProject.Controllers
             db.UsersGroups.Where(ug => ug.UserId == id).ToList().ForEach(ug =>
             {
                 //get group from ug id and insert it to groups list
-                groups.Add(db.Groups.Include(g=>g.Course).First(g=>g.Id==ug.GroupId));
+                groups.Add(db.Groups.Include(g => g.Course).First(g => g.Id == ug.GroupId));
             });
             return Ok(groups);
         }
@@ -60,9 +63,9 @@ namespace OmegaProject.Controllers
         [Route("GetGroupsByCourseId/{id}")]
         public IActionResult GetGroupsByCourseId(int id)
         {
-            var groups = db.Groups.Where(q=>q.CourseId==id).ToList();
+            var groups = db.Groups.Where(q => q.CourseId == id).ToList();
             //get all groups that Teaching this Topic
-            
+
             return Ok(groups);
         }
 
@@ -72,16 +75,21 @@ namespace OmegaProject.Controllers
         [Route("GetGroups")]
         public IActionResult GetGroupes()
         {
-            return Ok(db.Groups.Include(g=>g.Course).ToList());
+            return Ok(db.Groups.Include(g => g.Course).
+                Include(g => g.UserGroups).
+                ThenInclude(d => d.User).ToList());
         }
 
         [HttpGet]
         [Route("GetGroupById/{id}")]
         public IActionResult GetGroupById(int id)
         {
-            var g = db.Groups.Include(q=>q.UserGroups).ThenInclude(q=>q.User).ThenInclude(q=>q.Role).SingleOrDefault(x => x.Id == id);
+            var g = db.Groups.Include(q => q.UserGroups).
+                ThenInclude(q => q.User).
+                ThenInclude(q => q.Role).
+                SingleOrDefault(x => x.Id == id);
             if (g == null)
-                return StatusCode(404);
+                return NotFound("Not Found Group");
             return Ok(g);
         }
 
@@ -93,9 +101,11 @@ namespace OmegaProject.Controllers
             //if (temp != null)
             //    return BadRequest("Faild Added ...This Group Exist !!");
             //group.OpeningDate= System.DateTime.Now;
+            if (group == null)
+                return BadRequest("Fiald Adding Group");
             db.Groups.Add(group);
             db.SaveChanges();
-            return StatusCode(200);
+            return Ok("Group Added Successfully");
         }
 
         [HttpDelete]
@@ -106,11 +116,11 @@ namespace OmegaProject.Controllers
             //check if user Existed
             var temp = db.Groups.FirstOrDefault(x => x.Id == id);
             if (temp == null)
-                return BadRequest("Faild Deleted ...This Group not Exist !!");
+                return NotFound("Faild Deleted ...This Group not Exist !!");
 
 
             //delete HomeWork Files that Releated to this Group
-            var path = hosting.WebRootPath + "\\HomeWork" + "\\Files"+"\\"+id;
+            var path = hosting.WebRootPath + "\\HomeWork" + "\\Files" + "\\" + id;
             try
             {
                 if (Directory.Exists(path))
@@ -122,7 +132,7 @@ namespace OmegaProject.Controllers
             {
                 return BadRequest(r.Message);
             }
-           
+
             //foreach (var file in Directory.GetFiles(imagesFolder))
             //{
             //    System.IO.File.Delete(file);
@@ -130,7 +140,7 @@ namespace OmegaProject.Controllers
             //delete this group
             db.Groups.Remove(temp);
             db.SaveChanges();
-            return StatusCode(200);
+            return Ok("Group Deleted Successfully");
         }
 
         [HttpPut]
@@ -140,13 +150,13 @@ namespace OmegaProject.Controllers
             //check if user Existed
             var temp = db.Groups.FirstOrDefault(x => x.Id == group.Id);
             if (temp == null)
-                return BadRequest("Faild Editing ...This Group not Exist !!");
+                return NotFound("Faild Editing ...This Group not Exist !!");
             temp.Name = group.Name;
             temp.ClosingDate = group.ClosingDate;
             temp.OpeningDate = group.OpeningDate;
             temp.CourseId = group.CourseId;
             db.SaveChanges();
-            return StatusCode(200);
+            return Ok("Group Edited Successfully");
         }
     }
 }
