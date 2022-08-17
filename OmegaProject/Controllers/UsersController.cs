@@ -30,7 +30,7 @@ namespace OmegaProject.Controllers
         [Route("GetUsers")]
         public IActionResult GetUsers()
         {
-            var users = db.Users.Include(u => u.Messages).ToList();
+            var users = db.Users.Include(u => u.Messages).Include(u=>u.Role).ToList();
             users.Reverse();
             return Ok(users);
         }
@@ -51,7 +51,7 @@ namespace OmegaProject.Controllers
         public IActionResult GetUsersByRole(int role)
         {
 
-            var users = db.Users.Where(u => u.Role == role).ToList();
+            var users = db.Users.Where(u => u.RoleId == role).ToList();
             
             return Ok(users);
         }
@@ -70,22 +70,36 @@ namespace OmegaProject.Controllers
             return Ok(users);
         }
 
+        [HttpGet]
+        [Route("GetUsersById/{id}")]
+        public IActionResult GetUsersById(int id)
+        {
+            var user = db.Users.SingleOrDefault(u => u.Id == id);
+
+            return Ok(user);
+        }
 
         [HttpGet]
-        [Route("GetFreindsByUser/{id}")]
-        public IActionResult GetUsersByGroup(int id)
+        [Route("GetFreindsByUser")]
+        public IActionResult GetUsersByGroup()
         {
             var usersRes = new List<User>();
-            var usersId=new List<int>();    
+            var usersId=new List<int>();
+            int id = int.Parse(jwtService.GetTokenClaims());
+            var user=db.Users.SingleOrDefault(ug=>ug.Id == id);
+
+            if (user.RoleId==1)
+                return Ok(db.Users.Where(u=>u.Id!=id && u.RoleId!=3).ToList());
+           
             //get all groups that referenc to user
             var ugs = db.UsersGroups.Where(g => g.UserId == id).ToList();
-            //28 29 
             //get usres id that in same group user
+
             db.UsersGroups.Where(ug=>ug.UserId!=id).ToList().ForEach(ug =>
             {
                 ugs.ForEach(g =>
                 {
-                    if(g.GroupId==ug.GroupId)
+                    if(g.GroupId==ug.GroupId && !usersId.Contains(ug.UserId))
                         usersId.Add(ug.UserId);
                 });
             });
@@ -93,6 +107,10 @@ namespace OmegaProject.Controllers
             {
                 usersRes.Add(db.Users.FirstOrDefault(f=>f.Id==id));
             });
+            if (user.RoleId == 2)//get admins if user teacher
+                db.Users.Where(u => u.RoleId == 1).ToList().ForEach((u) => {
+                    usersRes.Add(u);
+                });
             return Ok(usersRes);
         }
 
@@ -108,7 +126,7 @@ namespace OmegaProject.Controllers
                 _users.Add(ug.User);
             });
 
-            db.Users.Where(u=>u.Role!=1).ToList().ForEach(u =>
+            db.Users.Where(u=>u.RoleId!=1).ToList().ForEach(u =>
             {
                 //check if user is not in current group
                 if (!_users.Contains(u))

@@ -44,21 +44,20 @@ namespace OmegaProject.Controllers
         }
 
         [HttpGet]
-        [Route("GetCourses/{id?}")]
-        public IActionResult GetCourses(int id = -1)
+        [Route("GetCourses")]
+        public IActionResult GetCourses()
         {
-            Course c = null;
-            if (id == -1)
-                return Ok(db.Courses.ToList());
-            else
-            {
-                c = db.Courses.Include(i=>i.groups).ToList().FirstOrDefault(f => f.Id == id);
-            }
+            return Ok(db.Courses.ToList());
+        }
+        [HttpGet]
+        [Route("GetCourseById/{id}")]
+        public IActionResult GetCourseById(int id)
+        {
+            var c=db.Courses.FirstOrDefault(u=>u.Id==id);
             if (c == null)
-                return BadRequest("Course Not Found !!");
+                return StatusCode(404);
             return Ok(c);
         }
-
 
         [HttpPost]
         [Route("PostCourse")]

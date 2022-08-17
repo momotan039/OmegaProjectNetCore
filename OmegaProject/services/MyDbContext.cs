@@ -12,6 +12,7 @@ namespace OmegaProject.services
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Role { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<GroupMessage> GroupMessages { get; set; }
         public DbSet<Course> Courses { get; set; }
         public DbSet<Grade> Grades { get; set; }
         public DbSet<Group> Groups { get; set; }
@@ -28,13 +29,23 @@ namespace OmegaProject.services
             modelBuilder.Entity<Message>()
                 .HasOne(m => m.Sender)
                 .WithMany(u => u.Messages)
-                .HasForeignKey(m=>m.SenderId);
+                .HasForeignKey(m => m.SenderId);
 
-            //modelBuilder.Entity<Group>().
-            //    HasMany(g => g.Users)
-            //    .WithMany(u => u.Groups);
+            //modelBuilder.Entity<UserGroup>().HasKey(ug=>new
+            //{
+            //    ug.UserId,
+            //    ug.GroupId
+            //});
+            //modelBuilder.Entity<UserGroup>()
+            //    .HasOne(ug=>ug.User)
+            //    .WithMany(ug => ug.Groups)
+            //    .HasForeignKey(ug=>ug.UserId);
 
-         
+            //modelBuilder.Entity<UserGroup>()
+            //  .HasOne(ug => ug.Group)
+            //  .WithMany(ug => ug.Users)
+            //  .HasForeignKey(ug => ug.GroupId);
+
         }
 
         }

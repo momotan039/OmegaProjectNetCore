@@ -9,6 +9,6 @@
         public int GroupId { get; set; }
 
         public virtual User User { get; set; }
-        public virtual User Group { get; set; }
+        public virtual Group Group { get; set; }
     }
 }
