@@ -15,6 +15,7 @@ namespace OmegaProject.DTO
         public string Phone { get; set; }
         public int RoleId { get; set; }
         public string IdCard { get; set; }
+        public bool ConfirmPassword { get; set; }
 
        //public virtual int GroupId { get; set; }
 
