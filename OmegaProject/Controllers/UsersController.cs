@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using MailKit.Net.Smtp;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MimeKit;
 using OmegaProject.DTO;
 using OmegaProject.services;
 using System.Collections.Generic;
@@ -145,7 +147,27 @@ namespace OmegaProject.Controllers
                 return BadRequest("The Id Card or Email associated with an existing user !!");
             db.Users.Add(user);
             db.SaveChanges();
-            return Ok("User Added successfully");
+
+            var msg = new MimeMessage();
+            msg.From.Add(new MailboxAddress(
+                "Omega Accademy",
+                "Admin.Omega.Com"));
+            msg.To.Add(new MailboxAddress(
+               user.FirstName,
+                user.Email));
+            msg.Subject = "Confirm Regestriation";
+            msg.Body = new TextPart("plain")
+            {
+                Text = "Text body will display here"
+            };
+            using (var client =new SmtpClient())
+            {
+                client.Connect("smtp.gmail.com",587,false);
+                client.Authenticate("admin@omega.com","visualstudio");
+                client.Send(msg);
+                client.Disconnect(true);
+            }
+                return Ok("User Added successfully");
         }
 
         [HttpDelete]
