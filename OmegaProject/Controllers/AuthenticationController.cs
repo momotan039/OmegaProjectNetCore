@@ -25,12 +25,14 @@ namespace OmegaProject.Controllers
         [Route("Login")]
         public IActionResult Login([FromBody]UserLogInDTO u)
         {
-            var user=db.Users
-                .SingleOrDefault(x=>x.Email==u.Email
-                && u.Password==x.Password);
+            string storedPassword=MyTools.CreateHashedPassword(u.Password);
+            var user = db.Users.FirstOrDefault(x => x.Email==u.Email);
 
-                if (user == null)
-                return BadRequest("This User Not Exist");
+            if (user == null)
+                return NotFound("This User Not Exist");
+
+            if (user.Password !=storedPassword)
+                return NotFound("Entered Wrong Password!!");
 
             return Ok(jwt.GenerateToken(user.Id + "", user.RoleId == 1 ? true : false));
         }
@@ -39,7 +41,8 @@ namespace OmegaProject.Controllers
         [Route("GetUserByToken")]
         public IActionResult GetUser()
         {
-            var user = db.Users.Include(f=>f.Role).SingleOrDefault(x => x.Id == int.Parse(jwt.GetTokenClaims()));
+            var user = db.Users.Include(f=>f.Role).
+                SingleOrDefault(x => x.Id == int.Parse(jwt.GetTokenClaims()));
             return Ok(user);
         }
 

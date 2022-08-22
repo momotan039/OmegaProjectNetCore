@@ -69,6 +69,7 @@ namespace OmegaProject.Controllers
             db.HomeWorks.Add(homeWork);
             db.SaveChanges();
             return Ok();
+
         }
 
         private void SaveFileOnServerStorage(string[] paths, IFormFile[] files)

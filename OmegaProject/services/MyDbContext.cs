@@ -19,9 +19,10 @@ namespace OmegaProject.services
         public DbSet<Group> Groups { get; set; }
         public DbSet<UserGroup> UsersGroups { get; set; }
         public DbSet<HomeWork> HomeWorks { get; set; }
-        public MyDbContext(DbContextOptions dbContextOption):base(dbContextOption)
+        private static DbContextOptions options;
+        public  MyDbContext(DbContextOptions dbContextOption):base(dbContextOption)
         {
-
+            MyDbContext.options= dbContextOption;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -46,7 +47,11 @@ namespace OmegaProject.services
             //  .HasOne(ug => ug.Group)
             //  .WithMany(ug => ug.Users)
             //  .HasForeignKey(ug => ug.GroupId);
-
+        }
+      
+        public static MyDbContext getInctence()
+        {
+            return new MyDbContext(options);
         }
     }
 }

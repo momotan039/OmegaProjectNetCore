@@ -23,7 +23,7 @@ namespace OmegaProject.Controllers
         public IActionResult GetGroupsbyUserId(int id)
         {
             if (db.Users.FirstOrDefault(u => u.Id == id) == null)
-                return NotFound("Not Found User");
+                return NotFound("User Not Exist");
 
             //get all realations user-groups
             var ugs = db.UsersGroups.Include(q=>q.Group).

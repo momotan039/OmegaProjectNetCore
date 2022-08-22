@@ -30,7 +30,7 @@ namespace OmegaProject.Controllers
         [Route("GetUsers")]
         public IActionResult GetUsers()
         {
-            var users = db.Users.Include(u => u.Messages).Include(u=>u.Role).ToList();
+            var users = MyDbContext.getInctence().Users.Include(u => u.Messages).Include(u=>u.Role).ToList();
             users.Reverse();
             return Ok(users);
         }
@@ -70,15 +70,7 @@ namespace OmegaProject.Controllers
 
             return Ok(users);
         }
-
-        [HttpGet]
-        [Route("GetUsersById/{id}")]
-        public IActionResult GetUsersById(int id)
-        {
-            var user = db.Users.Include(q=>q.Role).SingleOrDefault(u => u.Id == id);
-
-            return Ok(user);
-        }
+        
 
         [HttpGet]
         [Route("GetFreindsByUser")]
@@ -140,11 +132,23 @@ namespace OmegaProject.Controllers
         [Route("PostUser")]
         public IActionResult PostUsers([FromBody] User user)
         {
-            var temp=db.Users.FirstOrDefault(x => x.IdCard==user.IdCard ||x.Email==user.Email);
+            var temp=db.Users.FirstOrDefault(x => x.IdCard==user.IdCard || x.Email==user.Email);
+            
             if(temp!=null)
                 return BadRequest("The Id Card or Email associated with an existing user !!");
+
+            user.Password=MyTools.GenerateHashedPassword();
+
             db.Users.Add(user);
             db.SaveChanges();
+
+            int id = db.Users.FirstOrDefault(f => f.IdCard == user.IdCard).Id;
+
+            bool successSendMail = MyTools.SendConfirmRegistration(id, user.Email);
+
+            //if (!successSendMail)
+            //    return BadRequest("Error while sending Email Confirmation!!,Faild Adding User");
+
             return Ok("User Added successfully");
         }
 
@@ -169,7 +173,7 @@ namespace OmegaProject.Controllers
             var temp = db.Users.FirstOrDefault(x => x.Id == user.Id);
             if (temp == null)
                 return NotFound("Faild Editing ...This User not Exist !!");
-            temp.Role = user.Role;
+            temp.RoleId=user.RoleId;
             temp.FirstName = user.FirstName;
             temp.LastName = user.LastName;
             temp.Email = user.Email;

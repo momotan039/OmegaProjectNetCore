@@ -38,7 +38,7 @@ namespace OmegaProject.Controllers
             var user = db.Users.SingleOrDefault(r => r.Id == id);
 
             if (user == null)
-                return NotFound("Not Found User");
+                return NotFound("User Not Exist");
 
             var groups = new List<Group>();
             if (user.RoleId == 1)
@@ -125,7 +125,7 @@ namespace OmegaProject.Controllers
             {
                 if (Directory.Exists(path))
                 {
-                    Directory.Delete(path, true);
+                    Directory.Delete(path,true);
                 }
             }
             catch (Exception r)
