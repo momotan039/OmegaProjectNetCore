@@ -93,6 +93,8 @@ namespace OmegaProject.Controllers
             return Ok(g);
         }
 
+
+
         [HttpPost]
         [Route("PostGroup")]
         public IActionResult PostGroup([FromBody] Group group)

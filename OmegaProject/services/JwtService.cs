@@ -52,9 +52,11 @@ namespace OmegaProject.services
                     new Claim(TokenPrimaryKey, tokenPrimaryValue),
                     new Claim(ClaimTypes.Role, Admin ?  "Admin" : "BaseUser")
                 }),
+
                 Expires = expired,
                 SigningCredentials = new SigningCredentials(JwtSymmetricSecurityIssuerSigningKey, SecurityAlgorithms.HmacSha512),
                 //EncryptingCredentials = new EncryptingCredentials(JwtSymmetricSecurityTokenDecryptionKey, SecurityAlgorithms.Aes128KW, SecurityAlgorithms.Aes128CbcHmacSha256)
+
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();
