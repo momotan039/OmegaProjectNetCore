@@ -143,29 +143,6 @@ namespace OmegaProject.Controllers
 
             db.Users.Add(user);
             db.SaveChanges();
-
-<<<<<<< HEAD
-            var msg = new MimeMessage();
-            msg.From.Add(new MailboxAddress(
-                "Omega Accademy",
-                "Admin.Omega.Com"));
-            msg.To.Add(new MailboxAddress(
-               user.FirstName,
-                user.Email));
-            msg.Subject = "Confirm Regestriation";
-            msg.Body = new TextPart("plain")
-            {
-                Text = "Text body will display here"
-            };
-            using (var client =new SmtpClient())
-            {
-                client.Connect("smtp.gmail.com",587,false);
-                client.Authenticate("admin@omega.com","visualstudio");
-                client.Send(msg);
-                client.Disconnect(true);
-            }
-                return Ok("User Added successfully");
-=======
             int id = db.Users.FirstOrDefault(f => f.IdCard == user.IdCard).Id;
 
             bool successSendMail = MyTools.SendConfirmRegistration(id, user.Email);
@@ -174,7 +151,6 @@ namespace OmegaProject.Controllers
             //    return BadRequest("Error while sending Email Confirmation!!,Faild Adding User");
 
             return Ok("User Added successfully");
->>>>>>> ac4a54943f8229f913186590b12cafb57b35f466
         }
 
         [HttpDelete]
