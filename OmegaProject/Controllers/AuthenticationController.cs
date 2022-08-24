@@ -33,8 +33,15 @@ namespace OmegaProject.Controllers
 
             if (user.Password !=storedPassword)
                 return NotFound("Entered Wrong Password!!");
-
+            Response.Cookies.Append("token", 
+                jwt.GenerateToken(user.Id + "", user.RoleId == 1 ? true : false),
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                }
+                );
             return Ok(jwt.GenerateToken(user.Id + "", user.RoleId == 1 ? true : false));
+            //return Ok("Welcome Back Sir...");
         }
         [Authorize]
         [HttpGet]

@@ -30,6 +30,21 @@ namespace OmegaProject.Controllers
             return Ok(grades);
         }
 
+        [HttpGet]
+        [Route("GetGradesByTest/{testId}")]
+        public IActionResult GetGrades(int testId)
+        {
+            var grades = db.Grades.
+                Include(f => f.Test).
+                Include(f=>f.Student).
+                Include(f=>f.Group).
+                Where(f => f.Test.Id == testId).
+                ToList();
+
+            return Ok(grades);
+        }
+
+
         [HttpPost]
         [Route("SendGrade")]
         public IActionResult SendGrade([FromBody] Grade g)
@@ -71,15 +86,6 @@ namespace OmegaProject.Controllers
 
             if(grade==null)
                 return BadRequest("Faild Editing");
-
-            //grade = db.Grades.FirstOrDefault(
-            //    f => f.GroupId == g.GroupId
-            //&& f.StudentId == g.StudentId
-            //&& f.TestId == g.TestId
-            //);
-
-            //if (grade != null)
-            //    return BadRequest("Current Grade Already Exist For This Student");
 
             grade.SumGrade = g.SumGrade;
             grade.StudentId = g.StudentId;

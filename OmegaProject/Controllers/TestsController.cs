@@ -25,6 +25,12 @@ namespace OmegaProject.Controllers
         {
             return Ok(db.Tests.OrderByDescending(f=>f.Date).ToList());
         }
+        [HttpGet]
+        [Route("GetTestById/{id}")]
+        public IActionResult GetTestById(int id)
+        {
+            return Ok(db.Tests.FirstOrDefault(q=>q.Id==id));
+        }
 
         [HttpPost]
         [Route("PostTest")]

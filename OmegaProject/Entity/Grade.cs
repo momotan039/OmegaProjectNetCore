@@ -12,8 +12,10 @@ namespace OmegaProject.DTO
         public int GroupId { get; set; }
         public int TestId { get; set; }
         public string Note { get; set; }
+
         public virtual User Student { get; set; }
         public virtual Test Test { get; set; }
         public virtual Group Group { get; set; }
+
     }
 }
