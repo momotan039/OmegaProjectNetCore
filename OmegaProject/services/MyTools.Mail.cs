@@ -22,6 +22,30 @@ namespace OmegaProject.services
                                             font-weight:bold
                                             }
                             </style>";
+
+        static bool SendMail(MimeMessage msg)
+        {
+            SmtpClient client = new SmtpClient();
+            try
+            {
+                client.Connect("smtp.gmail.com", 465, true);
+                //this will send a mail
+                client.Authenticate("manager.omega.academy@gmail.com", "pfeqadqgnpittqpg");
+                client.Send(msg);
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            finally
+            {
+                client.Disconnect(true);
+                client.Dispose();
+            }
+        }
+
         public static bool SendConfirmRegistration(int userId, string reciver)
         {
             string link = "http://localhost:4200/ConfirmRegistration/" + userId;
@@ -36,76 +60,18 @@ namespace OmegaProject.services
                             <body>
                             <h1>Welcome to the <span style='color:orange'>Omega Academy</span> Family</h1>
                             Your account has been created successfully
-                            All you have to do is activate it via the following link
+                            All you have to do Now , is activate it via the following link
                             <a class='button' href='" + link + @"'>Confirm Regestriation</a>
                             </body>
                         </html>"
             };
 
-
-            SmtpClient client = new SmtpClient();
-
-            try
-            {
-                client.Connect("smtp.gmail.com", 465, true);
-                //this will send a mail
-                client.Authenticate("manager.omega.academy@gmail.com", "pfeqadqgnpittqpg");
-                client.Send(msg);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
-            finally
-            {
-                client.Disconnect(true);
-                client.Dispose();
-            }
+            return SendMail(msg);
         }
 
       
 
-        static void SendMail(string reciver, string subject, string body)
-        {
-            var msg = new MimeMessage();
-            msg.From.Add(new MailboxAddress("Admin Omega", "stam@gmail.com"));
-            msg.To.Add(MailboxAddress.Parse(reciver));
-            //msg.Subject = "Confirm Regestriation";
-            msg.Subject = subject;
-            msg.Body = new TextPart(MimeKit.Text.TextFormat.Html)
-            {
-                //Text = @"<html>
-                //            <body>
-                //            <h1>Welcome to the <span style='color:orange'>Omega</span> Academy family</h1>
-                //            Your account has been created successfully
-                //            All you have to do is activate it via the following link
-                //            <a href='http://localhost/'>Confirm Regestriation</a>
-                //            </body>
-
-                //        </html>"
-                Text = body
-            };
-
-            SmtpClient client = new SmtpClient();
-            try
-            {
-                client.Connect("smtp.gmail.com", 465, true);
-                //this will send a mail
-                client.Authenticate("manager.omega.academy@gmail.com", "pfeqadqgnpittqpg");
-                client.Send(msg);
-                Console.WriteLine("mail send Successfully!!");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-            finally
-            {
-                client.Disconnect(true);
-                client.Dispose();
-            }
-        }
+       
 
         public static bool SendResetPassMail(string token, string reciverMail)
         {
@@ -113,37 +79,19 @@ namespace OmegaProject.services
             string link = "http://localhost:4200/ResetPassword/" + token;
             msg.From.Add(new MailboxAddress("Admin Omega", "stam@gmail.com"));
             msg.To.Add(MailboxAddress.Parse(reciverMail));
-            //msg.Subject = "Confirm Regestriation";
             msg.Subject = "Reset Password Request";
             msg.Body = new TextPart(MimeKit.Text.TextFormat.Html)
             {
                 Text = @"<html>
+                            " + mainStyle + @"
                             <body>
-                            All you have to do in order reset your password is navigate the following link
+                            All you have to do Now ,  in order to  reset your password is navigate the following link
                             <a class='button' href='" + link + @"'>Confirm Regestriation</a>
                             </body>
                         </html>"
             };
 
-            SmtpClient client = new SmtpClient();
-            try
-            {
-                client.Connect("smtp.gmail.com", 465, true);
-                //this will send a mail
-                client.Authenticate("manager.omega.academy@gmail.com", "pfeqadqgnpittqpg");
-                client.Send(msg);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
-            finally
-            {
-                client.Disconnect(true);
-                client.Dispose();
-            }
-
+            return SendMail(msg);
         }
     }
 }

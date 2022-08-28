@@ -68,7 +68,7 @@ namespace OmegaProject.Controllers
             //save homework to database
             db.HomeWorks.Add(homeWork);
             db.SaveChanges();
-            return Ok();
+            return Ok("Home Work Sended Successfully");
 
         }
 

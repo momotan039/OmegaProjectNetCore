@@ -19,7 +19,7 @@ namespace OmegaProject.Controllers
 
         [HttpGet]
         [Route("GetRoles/{id?}")]
-        public IActionResult GetUsers(int id = -1)
+        public IActionResult GetRoles(int id = -1)
         {
             if (id == -1)
                 return Ok(db.Role);

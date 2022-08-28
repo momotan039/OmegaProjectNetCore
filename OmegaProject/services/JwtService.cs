@@ -40,9 +40,16 @@ namespace OmegaProject.services
         };
 
         //החלק שמחולל את המפתח -הטוקן
-        public string GenerateToken(string tokenPrimaryValue, bool Admin)
+        public string GenerateToken(string tokenPrimaryValue, bool Admin, TimeSpan? expiredTime)
         {
-            DateTime expired = DateTime.Now.Add(TokenNumMinutesToExtend);
+            DateTime expired;
+
+            if (expiredTime==null)
+             expired = DateTime.Now.Add(TokenNumMinutesToExtend);
+            else
+            //set custome Expiration Time
+            expired=DateTime.Now.Add((TimeSpan)expiredTime);
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Issuer = "issuer",
