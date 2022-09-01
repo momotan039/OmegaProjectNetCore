@@ -11,6 +11,7 @@ namespace OmegaProject.Entity
         public string FilesPath { get; set; }
         public int GroupId { get; set; }
         public int TeacherId { get; set; }
+        public bool RequiredSubmit { get; set; }
 
         public DateTime SendingDate { get; set; }
         public virtual Group Group { get; set; }

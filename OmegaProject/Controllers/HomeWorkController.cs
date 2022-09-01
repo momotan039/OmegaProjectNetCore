@@ -33,25 +33,27 @@ namespace OmegaProject.Controllers
         public IActionResult SendHomeWork(IFormFile[] files)
         {
             string path = Path.Combine(hosting.WebRootPath, "HomeWork",
-                   "Files");
+                   "Teachers");
 
             var homeWork = new HomeWork();
             homeWork.Title = HttpContext.Request.Form["title"];
             homeWork.Contents = HttpContext.Request.Form["contents"];
             homeWork.GroupId = int.Parse(HttpContext.Request.Form["groupId"]);
             homeWork.TeacherId = int.Parse(HttpContext.Request.Form["teacherId"]);
+            homeWork.RequiredSubmit = bool.Parse(HttpContext.Request.Form["requiredSubmit"]);
+
             homeWork.SendingDate = System.DateTime.Now;
 
             //get paths of uploaded files
-            if (files.Length !=0)
+            if (files.Length != 0)
             {
-                Init_Group_Teacher_Folders(path, homeWork);
+                InitNecessaryFolders(path, homeWork);
                 string mainRoot = Path.Combine(hosting.WebRootPath, "HomeWork",
-                    "Files", $"{homeWork.GroupId}", $"{homeWork.TeacherId}");
+                    "Teachers", $"{homeWork.GroupId}", $"{homeWork.TeacherId}");
                 foreach (var file in files)
                 {
                     path = CustomizeNameFile(mainRoot, file.FileName);
-                    homeWork.FilesPath += path+"\n";
+                    homeWork.FilesPath += path + "\n";
                 }
                 // if user Uploaded files .. save it
                 var paths = homeWork.FilesPath.Split('\n').ToArray();
@@ -60,7 +62,7 @@ namespace OmegaProject.Controllers
                     SaveFileOnServerStorage(paths, files);
                 }
                 catch (Exception r)
-                { 
+                {
                     return BadRequest("Occured Error While Saving...Try Again");
                 }
             }
@@ -86,12 +88,12 @@ namespace OmegaProject.Controllers
                 }
             }
 
-            
+
 
         }
 
-        private string CustomizeNameFile(string mainRoot,string file)
-        {//x/x/x/file.png
+        private string CustomizeNameFile(string mainRoot, string file)
+        {
 
             if (!System.IO.File.Exists(Path.Combine(mainRoot, file)))
                 return Path.Combine(mainRoot, file);
@@ -111,7 +113,7 @@ namespace OmegaProject.Controllers
             }
         }
 
-        private void Init_Group_Teacher_Folders(string path, HomeWork homeWork)
+        private void InitNecessaryFolders(string path, HomeWork homeWork)
         {
             //check if exist Group id folder adn create it
             if (!Directory.Exists(path + $"\\{homeWork.GroupId}"))
@@ -136,13 +138,17 @@ namespace OmegaProject.Controllers
             //return Ok("Yes");
             if (id == -1)
                 return Ok(db.HomeWorks.ToList());
-            return Ok(db.HomeWorks.Include(q=>q.Teacher).Include(q => q.Group).FirstOrDefault(f => f.Id == id));
+            return Ok(db.HomeWorks.Include(q => q.Teacher).Include(q => q.Group).FirstOrDefault(f => f.Id == id));
         }
         [HttpGet]
         [Route("GetHomeWorkByTeacherId/{id}")]
         public IActionResult GetHomeWorkByTeacherId(int id)
         {
-            return Ok(db.HomeWorks.Where(w => w.TeacherId == id).ToList());
+            return Ok(db.HomeWorks.
+                Include(q => q.Group).
+                Where(w => w.TeacherId == id).
+                OrderByDescending(q => q.SendingDate).
+                ToList());
         }
 
         [HttpGet]
@@ -150,33 +156,48 @@ namespace OmegaProject.Controllers
         public IActionResult GetHomeWorkByStudentId(int id)
         {
             //get all gorups that current student is in
-            var ugs=db.UsersGroups.Where(q=>q.UserId==id).ToList();
-            var homeworks=new  List<HomeWork>();
+            var ugs = db.UsersGroups.Where(q => q.UserId == id).ToList();
+            var homeworks = new List<HomeWork>();
             ugs.ForEach(f =>
             {
-                homeworks.AddRange(db.HomeWorks.Include(q=>q.Group).Include(q=>q.Teacher)
+                homeworks.AddRange(db.HomeWorks.Include(q => q.Group).Include(q => q.Teacher)
                     .Where(q => q.GroupId == f.GroupId));
             });
             homeworks = homeworks.OrderBy(q => q.SendingDate).Reverse().ToList();
             return Ok(homeworks);
         }
 
+
+        [HttpDelete]
+        [Route("DeleteHomeWork/{id}")]
+        public IActionResult DeleteHomeWork(int id)
+        {
+            var hw = db.HomeWorks.SingleOrDefault(f => f.Id == id);
+            if (hw == null)
+                return NotFound("This Homework not found!!");
+            db.HomeWorks.Remove(hw);
+            db.SaveChanges();
+            return Ok("HomeWork Deleted Successfully !!");
+
+        }
+
+
         [HttpGet]
         [Route("DownloadHomeWorkFile")]
         public ActionResult DownloadDocument(int GroupId, int TeacherId, string name)
         {
-            string url = hosting.WebRootPath 
+            string url = hosting.WebRootPath
                 + "/HomeWork/Files/" +
                 GroupId + "/" +
-                TeacherId +"/" +
+                TeacherId + "/" +
                 name;
 
-            if(!System.IO.File.Exists(url))
+            if (!System.IO.File.Exists(url))
                 return NotFound("Not Found File");
 
             byte[] fileBytes = System.IO.File.ReadAllBytes(url);
             return File(fileBytes, "application/force-download", name);
         }
     }
-   
+
 }

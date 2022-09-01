@@ -19,6 +19,7 @@ namespace OmegaProject.services
         public DbSet<Group> Groups { get; set; }
         public DbSet<UserGroup> UsersGroups { get; set; }
         public DbSet<HomeWork> HomeWorks { get; set; }
+        public DbSet<HomeWorkStudent> HomeWorkStudents { get; set; }
         private static DbContextOptions options;
         public  MyDbContext(DbContextOptions dbContextOption):base(dbContextOption)
         {
@@ -32,6 +33,8 @@ namespace OmegaProject.services
                 .HasOne(m => m.Reciver)
                 .WithMany(u => u.Messages)
                 .HasForeignKey(m => m.ReciverId);
+
+         
 
             //modelBuilder.Entity<UserGroup>().HasKey(ug=>new
             //{
