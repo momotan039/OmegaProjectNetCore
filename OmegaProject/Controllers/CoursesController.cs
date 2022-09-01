@@ -79,6 +79,7 @@ namespace OmegaProject.Controllers
                 return NotFound("Faild Deleted ...This Course not Exist !!");
 
             db.Courses.Remove(temp);
+
             db.SaveChanges();
             return Ok("Course Deleted Successfully");
         }
