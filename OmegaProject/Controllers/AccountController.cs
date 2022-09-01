@@ -22,6 +22,7 @@ namespace OmegaProject.Controllers
         [Route("ResetPassword")]
         public IActionResult ResetPassword(UserLogInDTO model)
         {
+            model.Email = jwt.GetTokenClaims();
             var user=db.Users.FirstOrDefault(q=>q.Email==model.Email);
             if(user==null)
                 return NotFound("User Not Exist!!");
@@ -32,17 +33,20 @@ namespace OmegaProject.Controllers
 
         [HttpPost]
         [Route("ForgetPassword")]
-        public IActionResult ForgetPassword([FromBody]string mail)
+        public IActionResult ForgetPassword([FromBody]UserLogInDTO u)
         {
 
-            var user = db.Users.FirstOrDefault(q => q.Email == mail);
+            var user = db.Users.FirstOrDefault(q => q.Email == u.Email);
 
             if (user == null)
                 return NotFound("User Not Exist!!");
 
-            string token=jwt.GenerateToken(mail, false);
+            string token=jwt.GenerateToken(u.Email, false,new System.TimeSpan(0,5,0));
+
             token = token.Replace("Bearer ", "");
-            bool success = MyTools.SendResetPassMail(token, mail);
+
+            bool success = MyTools.SendResetPassMail(token, u.Email);
+
             if(!success)
             return BadRequest("Occured Error While Sending Link to Mail!!");
 

@@ -15,7 +15,6 @@ namespace OmegaProject.Controllers
     [ApiController]
     //enable cros
     //[EnableCors("myPolicy")]
-    [Authorize]
     public class UsersController : ControllerBase
     {
         public MyDbContext db;
