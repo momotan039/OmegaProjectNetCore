@@ -7,6 +7,7 @@ using OmegaProject.Entity;
 using OmegaProject.services;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Infrastructure;
 using System.IO;
 using System.Linq;
 
@@ -41,20 +42,16 @@ namespace OmegaProject.Controllers
             homeWork.GroupId = int.Parse(HttpContext.Request.Form["groupId"]);
             homeWork.TeacherId = int.Parse(HttpContext.Request.Form["teacherId"]);
             homeWork.RequiredSubmit = bool.Parse(HttpContext.Request.Form["requiredSubmit"]);
-
             homeWork.SendingDate = System.DateTime.Now;
 
+            db.HomeWorks.Add(homeWork);
+            db.SaveChanges();
             //Handel uploded files 
             if (files.Length != 0)
             {
-                //db.HomeWorks.Add(new HomeWork() { SendingDate=new DateTime()});
-                //db.SaveChanges();
-
-                //var sdd = db.HomeWorks.FromSqlRaw("SELECT IDENT_CURRENT('grades')");
-                var id = db.HomeWorks.ToList().LastOrDefault().Id+1;
-                InitNecessaryFolders(path, homeWork,id);
+                InitNecessaryFolders(path, homeWork,homeWork.Id);
                 string mainRoot = Path.Combine(hosting.WebRootPath, "HomeWork",
-                    "Teachers", $"{homeWork.GroupId}", $"{homeWork.TeacherId}",$"{id}");
+                    "Teachers", $"{homeWork.GroupId}", $"{homeWork.TeacherId}",$"{homeWork.Id}");
                 foreach (var file in files)
                 {
                     path = CustomizeNameFile(mainRoot, file.FileName);
@@ -68,11 +65,12 @@ namespace OmegaProject.Controllers
                 }
                 catch (Exception r)
                 {
+                    db.HomeWorks.Remove(homeWork);
+                    db.SaveChanges();
                     return BadRequest("Occured Error While Saving...Try Again");
                 }
             }
-
-            db.HomeWorks.Add(homeWork);
+            //save last changes => files path
             db.SaveChanges();
             return Ok("Home Work Sended Successfully");
 
@@ -204,12 +202,13 @@ namespace OmegaProject.Controllers
 
         [HttpGet]
         [Route("DownloadHomeWorkFile")]
-        public ActionResult DownloadDocument(int GroupId, int TeacherId, string name)
+        public ActionResult DownloadDocument(int homeworkId,int GroupId, int TeacherId, string name)
         {
             string url = hosting.WebRootPath
-                + "/HomeWork/Files/" +
+                + "/HomeWork/Teachers/" +
                 GroupId + "/" +
                 TeacherId + "/" +
+                homeworkId + "/" +
                 name;
 
             if (!System.IO.File.Exists(url))
