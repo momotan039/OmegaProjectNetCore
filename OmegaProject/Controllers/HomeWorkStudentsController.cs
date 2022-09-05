@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using Cake.Core.IO;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using OmegaProject.Entity;
 using OmegaProject.services;
@@ -9,6 +11,10 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Path = System.IO.Path;
 
 namespace OmegaProject.Controllers
 {
@@ -40,12 +46,10 @@ namespace OmegaProject.Controllers
                 return NotFound("Not found Relation ship between student and homework");
             return Ok(data);
         }
-
         [HttpPost]
         [Route("SubmitFiles")]
-        public ActionResult SubmitFiles(IFormFile[] files)
+        public async Task<IActionResult> SubmitFiles(IFormFile[] files)
         {
-
             string path = Path.Combine(hosting.WebRootPath, "HomeWork",
                   "Submited");
 
@@ -61,7 +65,7 @@ namespace OmegaProject.Controllers
             //get paths of uploaded files
             if (files.Length != 0)
             {
-                InitNecessaryFolders(path, hws,GroupId);
+                InitNecessaryFolders(path, hws, GroupId);
 
                 string mainRoot = Path.Combine(hosting.WebRootPath, "HomeWork",
                     "Submited", $"{GroupId}", $"{hws.StudentId}", $"{hws.HomeWorkId}");
@@ -137,31 +141,36 @@ namespace OmegaProject.Controllers
                 Directory.CreateDirectory(path + $"\\{groupId}" + $"\\{hws.StudentId}");
 
             //check if exist submited homework id and create it
-            if (!Directory.Exists(path + $"\\{groupId}" + $"\\{hws.StudentId}"+$"\\{hws.HomeWorkId}"))
+            if (!Directory.Exists(path + $"\\{groupId}" + $"\\{hws.StudentId}" + $"\\{hws.HomeWorkId}"))
                 Directory.CreateDirectory(path + $"\\{groupId}" + $"\\{hws.StudentId}" + $"\\{hws.HomeWorkId}");
         }
 
 
         [HttpDelete]
-        [Route("DeleteSubmitedHomeworkStudent/{id}")]
-        public ActionResult SubmitHomeworkStudent(int id)
+        [Route("DeleteSubmited")]
+        public ActionResult DeleteSubmited([FromBody] dynamic homeworkStudent)
         {
+            int id = homeworkStudent.id;
+
             var hws = db.HomeWorkStudents.SingleOrDefault(f => f.Id == id);
             if (hws == null)
                 return NotFound("Not Found Submited HomeWork");
 
-            string mainRoot = Path.Combine(hosting.WebRootPath, "HomeWork",
-                    "Submited", $"{hws.StudentId}", $"{hws.HomeWorkId}");
+            string mainRoot = Path.Combine(hosting.WebRootPath, "HomeWork", 
+                    "Submited", $"{homeworkStudent.groupId}", $"{hws.StudentId}", $"{hws.HomeWorkId}");
 
-            try
-            {
-                //remove all related files
-                Directory.Delete(mainRoot, true);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest("Occured Error While Deletion");
-            }
+            //remove all related files
+            
+            if(Directory.Exists(mainRoot))
+            Directory.Delete(mainRoot, true);
+            //try
+            //{
+
+            //}
+            //catch (Exception ex)
+            //{
+            //    return BadRequest("Occured Error While Deletion");
+            //}
 
             db.HomeWorkStudents.Remove(hws);
             db.SaveChanges();
@@ -169,8 +178,8 @@ namespace OmegaProject.Controllers
         }
 
         [HttpGet]
-        [Route("GetSubmitedHomeworkById/{id}")]
-        public ActionResult GetSubmitedHomeworkById(int id)
+        [Route("GetSubmitedStudentsById/{id}")]
+        public ActionResult GetSubmitedStudentById(int id)
         {
             var homework = db.HomeWorks.SingleOrDefault(f => f.Id == id);
             var Submited_Students = db.HomeWorkStudents
@@ -192,11 +201,12 @@ namespace OmegaProject.Controllers
                     s.email = q.User.Email;
 
                     //get  student properties
-                    var student = Submited_Students.FirstOrDefault(f => f.StudentId == q.UserId);
-                    if (student != null)
+                    var homeworkStudent = Submited_Students.FirstOrDefault(f => f.StudentId == q.UserId);
+                    if (homeworkStudent != null)
                     {
                         s.submited = "Yes";
-                        s.pathFiles = student.FilesPath;
+                        s.pathFiles = homeworkStudent.FilesPath;
+                        s.homeWorkStudentId = homeworkStudent.Id;
                     }
                     else
                         s.submited = "No";
@@ -206,10 +216,46 @@ namespace OmegaProject.Controllers
             return Ok(students.OrderByDescending(d => ((dynamic)d).submited));
         }
 
-
         [HttpGet]
+        [Route("GetSubmitStudentByself")]
+        public ActionResult GetSubmitStudentByself(int studentId, int homeWorkId)
+        {
+            var data = db.HomeWorkStudents
+                .Include(q=>q.Student)
+                .FirstOrDefault(q=>q.StudentId== studentId && q.HomeWorkId== homeWorkId);
+
+            if (data == null)
+                return Ok(null);
+
+            dynamic s = new ExpandoObject();
+            s.firstName = data.Student.FirstName;
+            s.lastName = data.Student.LastName;
+            s.idCard = data.Student.IdCard;
+            s.email = data.Student.Email;
+
+            if ( data.FilesPath != "")
+            {
+                s.submited = "Yes";
+                s.pathFiles = data.FilesPath;
+                s.homeWorkStudentId = data.Id;
+            }
+            else
+                s.submited = "No";
+            return Ok(s);
+        }
+        private string GetContentType(string path)
+        {
+            var provider = new FileExtensionContentTypeProvider();
+            string contentType;
+            if (!provider.TryGetContentType(path, out contentType))
+            {
+                contentType = "application/octet-stream";
+            }
+            return contentType;
+        }
+        [HttpGet, DisableRequestSizeLimit]
         [Route("DownloadFile")]
-        public ActionResult DownloadDocument(int homeworkId, int GroupId, int StudentId, string name)
+        public async Task<IActionResult> DownloadDocument(int homeworkId, int GroupId, int StudentId, string name)
         {
             string url = hosting.WebRootPath
                 + "/HomeWork/Submited/" +
@@ -218,11 +264,36 @@ namespace OmegaProject.Controllers
                 homeworkId + "/" +
                 name;
 
-            if (!System.IO.File.Exists(url))
-                return NotFound("Not Found File");
+            //using (WebClient wc = new WebClient())
+            //{
+            //    wc.Headers.Add("User-Agent: Test");
+            //     wc.DownloadFile(url,name);
+            //}
+            var memory = new MemoryStream();
+            using (var stream = new FileStream(url, FileMode.Open))
+            {
+                await stream.CopyToAsync(memory);
+            }
+            memory.Position = 0;
 
-            byte[] fileBytes = System.IO.File.ReadAllBytes(url);
-            return File(fileBytes, "application/force-download", name);
+            return  Ok(File(memory, GetContentType(url), name)) ;
+            //using HttpResponseMessage response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+            //using Stream streamToReadFrom = await response.Content.ReadAsStreamAsync();
+            //using Stream streamToWriteTo = System.IO.File.Open(url, FileMode.Create);
+            //await streamToReadFrom.CopyToAsync(streamToWriteTo);
+
+            //Stream stream =System.IO.File.OpenRead(url);
+
+            //if (stream == null)
+            //    return NotFound("Not Found File");
+
+            //return new FileStreamResult(stream, "application/octet-stream");
+
+            //if (!System.IO.File.Exists(url))
+            //    return NotFound("Not Found File");
+
+            //byte[] fileBytes = System.IO.File.ReadAllBytes(url);
+            //return File(fileBytes, "application/force-download", name);
         }
     }
 }

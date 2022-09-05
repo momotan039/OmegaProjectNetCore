@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Cake.Core" Version="2.2.0" />
     <PackageReference Include="EntityFramework" Version="6.4.4" />
     <PackageReference Include="MailKit" Version="3.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.27" />
@@ -22,11 +23,14 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.5" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="wwwroot\HomeWork\Files\" />
     <Folder Include="wwwroot\HomeWork\NewFolder\" />
+    <Folder Include="wwwroot\HomeWork\Submited\" />
+    <Folder Include="wwwroot\HomeWork\Teachers\" />
     <Folder Include="wwwroot\images\" />
   </ItemGroup>
 

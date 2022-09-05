@@ -131,6 +131,66 @@ namespace OmegaProject.Controllers
 
         }
 
+        [HttpPut]
+        [Route("EditHomeWork")]
+
+        public IActionResult EditHomeWork(IFormFile[] files)
+        {
+            string path = Path.Combine(hosting.WebRootPath, "HomeWork",
+                  "Teachers");
+
+            int id = int.Parse(HttpContext.Request.Form["id"]);
+
+            var homeWork = db.HomeWorks.FirstOrDefault(f => f.Id == id);
+            if (homeWork == null)
+                return NotFound("Not Found HomeWork");
+
+            homeWork.Title = HttpContext.Request.Form["title"];
+            homeWork.Contents = HttpContext.Request.Form["contents"];
+            homeWork.GroupId = int.Parse(HttpContext.Request.Form["groupId"]);
+            homeWork.TeacherId = int.Parse(HttpContext.Request.Form["teacherId"]);
+            homeWork.RequiredSubmit = bool.Parse(HttpContext.Request.Form["requiredSubmit"]);
+            db.SaveChanges();
+
+
+            //if change Requied Submit to false 
+            //Delete all realated files and Submite Homeworks
+            db.HomeWorkStudents.RemoveRange(db.HomeWorkStudents.Where(f => f.HomeWorkId == homeWork.Id));
+            
+
+            //Handel uploded files 
+            if (files.Length != 0)
+            {
+                InitNecessaryFolders(path, homeWork, homeWork.Id);
+                string mainRoot = Path.Combine(path,
+                    "Teachers",
+                    $"{homeWork.GroupId}",
+                    $"{homeWork.TeacherId}",
+                    $"{homeWork.Id}");
+
+                foreach (var file in files)
+                {
+                    path = CustomizeNameFile(mainRoot, file.FileName);
+                    homeWork.FilesPath += path + "\n";
+                }
+
+                // if user Uploaded files .. save it
+                var paths = homeWork.FilesPath.Split('\n').ToArray();
+                try
+                {
+                    SaveFileOnServerStorage(paths, files);
+                }
+                catch (Exception r)
+                {
+                    db.HomeWorks.Remove(homeWork);
+                    db.SaveChanges();
+                    return BadRequest("Occured Error While Saving...Try Again");
+                }
+            }
+            //save last changes => files path
+            db.SaveChanges();
+            return Ok("Home Work Edited Successfully");
+        }
         [HttpGet]
         [Route("GetHomeWork/{id?}")]
         public IActionResult GetHomeWork(int id = -1)
@@ -174,6 +234,7 @@ namespace OmegaProject.Controllers
             return Ok(homeworks);
         }
 
+       
 
         [HttpDelete]
         [Route("DeleteHomeWork")]
@@ -217,6 +278,7 @@ namespace OmegaProject.Controllers
             byte[] fileBytes = System.IO.File.ReadAllBytes(url);
             return File(fileBytes, "application/force-download", name);
         }
+
     }
 
 }

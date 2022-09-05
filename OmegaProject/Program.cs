@@ -20,8 +20,9 @@ namespace OmegaProject
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>().
-                    UseUrls(urls: "http://localhost:10000");
+                    webBuilder
+                     .UseStartup<Startup>();
+                    //UseUrls(urls: "http://localhost:10000");
                 });
     }
 }
