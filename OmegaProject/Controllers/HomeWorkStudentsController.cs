@@ -295,5 +295,17 @@ namespace OmegaProject.Controllers
             //byte[] fileBytes = System.IO.File.ReadAllBytes(url);
             //return File(fileBytes, "application/force-download", name);
         }
+
+
+        [HttpGet]
+        [Route("DownloadFileByPath")]
+        public ActionResult DownloadFileByPath([FromQuery]string url)
+        {
+            if (!System.IO.File.Exists(url))
+                return NotFound("Not Found File");
+
+            byte[] fileBytes = System.IO.File.ReadAllBytes(url);
+            return File(fileBytes, "application/force-download", Path.GetFileName(url));
+        }
     }
 }
