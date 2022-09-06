@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using OmegaProject.DTO;
 using OmegaProject.Entity;
 using OmegaProject.services;
@@ -10,6 +11,7 @@ using System.Collections.Generic;
 using System.Data.Entity.Infrastructure;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace OmegaProject.Controllers
 {
@@ -31,7 +33,7 @@ namespace OmegaProject.Controllers
 
         [HttpPost]
         [Route("SendHomeWork")]
-        public IActionResult SendHomeWork(IFormFile[] files)
+        public async Task<IActionResult> SendHomeWork(IFormFile[] files)
         {
             string path = Path.Combine(hosting.WebRootPath, "HomeWork",
                    "Teachers");
@@ -61,7 +63,7 @@ namespace OmegaProject.Controllers
                 var paths = homeWork.FilesPath.Split('\n').ToArray();
                 try
                 {
-                    SaveFileOnServerStorage(paths, files);
+                     SaveFileOnServerStorage(paths, files);
                 }
                 catch (Exception r)
                 {
@@ -76,20 +78,39 @@ namespace OmegaProject.Controllers
 
         }
 
-        private void SaveFileOnServerStorage(string[] paths, IFormFile[] files)
+        private void SaveFileOnServerStorage(string[] paths, IFormFile[] files,bool isEdit = false)
         {
             int index = 0;
+            if(!isEdit)
             foreach (var file in files)
             {
+                
                 using (var fs = new FileStream(paths[index++], FileMode.Create))
                 {
                     if (file != null)
                     {
-                        file.CopyTo(fs);
+                         file.CopyTo(fs);
                     }
                 }
             }
 
+            else
+            {
+                foreach (var file in files)
+                {
+                    var _file = paths.FirstOrDefault(f=>f.Contains(file.FileName));
+                    if (_file == null)
+                        continue;
+                    using (var fs = new FileStream(_file, FileMode.Create))
+                    {
+
+                        if (file != null)
+                        {
+                            file.CopyTo(fs);
+                        }
+                    }
+                }
+            }
 
 
         }
@@ -139,31 +160,64 @@ namespace OmegaProject.Controllers
             string path = Path.Combine(hosting.WebRootPath, "HomeWork",
                   "Teachers");
 
+            bool modeAfterChange = false;
+            bool modeBeforeChnge = false;
             int id = int.Parse(HttpContext.Request.Form["id"]);
 
             var homeWork = db.HomeWorks.FirstOrDefault(f => f.Id == id);
             if (homeWork == null)
                 return NotFound("Not Found HomeWork");
+            modeBeforeChnge = homeWork.RequiredSubmit;
 
             homeWork.Title = HttpContext.Request.Form["title"];
             homeWork.Contents = HttpContext.Request.Form["contents"];
             homeWork.GroupId = int.Parse(HttpContext.Request.Form["groupId"]);
             homeWork.TeacherId = int.Parse(HttpContext.Request.Form["teacherId"]);
-            homeWork.RequiredSubmit = bool.Parse(HttpContext.Request.Form["requiredSubmit"]);
+            modeAfterChange = bool.Parse(HttpContext.Request.Form["requiredSubmit"]);
+            homeWork.RequiredSubmit = modeAfterChange;
             db.SaveChanges();
 
-
             //if change Requied Submit to false 
-            //Delete all realated files and Submite Homeworks
-            db.HomeWorkStudents.RemoveRange(db.HomeWorkStudents.Where(f => f.HomeWorkId == homeWork.Id));
-            
+            //Delete all realated Submite Homeworks and Files
+            if (modeBeforeChnge && !modeAfterChange)
+            {
+                var homeworksStududents = db.HomeWorkStudents.Where(f => f.HomeWorkId == homeWork.Id);
+                //Delete all realated files of Submite Homeworks
+                MyTools.RemoveFilesOfStudents(db.HomeWorkStudents.ToList(),
+                    Path.Combine(hosting.WebRootPath, "HomeWork", "Submited", $"{homeWork.GroupId}"));
+
+                db.HomeWorkStudents.RemoveRange(homeworksStududents);
+                db.SaveChanges();
+                
+            }
+
+            //check if Change or remove recent uploaded Files
+            var _reUploadedFiles = HttpContext.Request.Form["reUploadedFiles"].ToString();
+            if (_reUploadedFiles!="")
+            {
+                var arrPaths = _reUploadedFiles.Split("\r\n");
+                for (int i = 0; i < arrPaths.Length-1; i++)
+                {
+                    //get path by name file
+                    string pathFile = homeWork.FilesPath.Split('\n').FirstOrDefault(f => f.Contains(arrPaths[i]));
+
+                    if (pathFile == null)
+                        continue;
+
+                    if (System.IO.File.Exists(pathFile))
+                        System.IO.File.Delete(pathFile);
+
+                    //also change database record if change recent uploaded Files
+                    homeWork.FilesPath = homeWork.FilesPath.Replace(pathFile + "\n", "");
+                }
+            }
+
 
             //Handel uploded files 
             if (files.Length != 0)
             {
                 InitNecessaryFolders(path, homeWork, homeWork.Id);
                 string mainRoot = Path.Combine(path,
-                    "Teachers",
                     $"{homeWork.GroupId}",
                     $"{homeWork.TeacherId}",
                     $"{homeWork.Id}");
@@ -178,7 +232,7 @@ namespace OmegaProject.Controllers
                 var paths = homeWork.FilesPath.Split('\n').ToArray();
                 try
                 {
-                    SaveFileOnServerStorage(paths, files);
+                    SaveFileOnServerStorage(paths, files,true);
                 }
                 catch (Exception r)
                 {
@@ -248,6 +302,7 @@ namespace OmegaProject.Controllers
                    "Teachers", $"{hw.GroupId}", $"{hw.TeacherId}", $"{hw.Id}");
             try
             {
+                if(Directory.Exists(mainRoot))
                 Directory.Delete(mainRoot,true);
             }
             catch (Exception ex)
