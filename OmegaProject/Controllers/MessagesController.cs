@@ -101,10 +101,29 @@ namespace OmegaProject.Controllers
             return Ok(msgs);
         }
         [HttpGet]
-        [Route("GetAll")]
-        public IActionResult GetAll()
+        [Route("GetAllUnreadMessages")]
+        public IActionResult GetAGetAllUnreadMessagesll()
         {
-            return Ok(db.Messages.Include(q=>q.Sender).Include(q => q.Reciver).First());
+            int id = int.Parse(jwt.GetTokenClaims());
+
+            return Ok(db.Messages.Where(f=>!f.IsOpened && f.ReciverId==id));
         }
+        [HttpGet]
+        [Route("ReadMessage/{id}")]
+        public IActionResult ReadMessage(int id)
+        {
+            var msg = db.Messages.FirstOrDefault(q=>q.Id==id);
+            msg.IsOpened = true;
+            try
+            {
+                db.SaveChanges();
+            }
+            catch
+            {
+                return BadRequest("Filad Changing status of message");
+            }
+            return Ok("Message Changed Succesfully");
+        }
+
     }
 }
