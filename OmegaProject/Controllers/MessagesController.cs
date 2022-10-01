@@ -6,7 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
 using OmegaProject.services;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace OmegaProject.Controllers
 {
@@ -17,7 +19,7 @@ namespace OmegaProject.Controllers
     {
         public MyDbContext db;
         private readonly JwtService jwt;
-
+        static int countMessages = 1;
         public MessagesController(MyDbContext _db, JwtService jwt)
         {
             db = _db;
@@ -36,9 +38,9 @@ namespace OmegaProject.Controllers
             return StatusCode(200);
         }
 
-       [HttpPost]
-       [Route("SendMessage")]
-       public IActionResult SendMessage([FromBody] Message msg)
+        [HttpPost]
+        [Route("SendMessage")]
+        public IActionResult SendMessage([FromBody] Message msg)
         {
             msg.SendingDate = System.DateTime.Now;
             db.Messages.Add(msg);
@@ -47,13 +49,13 @@ namespace OmegaProject.Controllers
         }
 
 
-       
+
 
         [HttpPut]
         [Route("ChangeStatusMessage")]
         public IActionResult ChangeStatusMessage([FromBody] Message msg)
         {
-            var temp=db.Messages.Find(msg.Id);
+            var temp = db.Messages.Find(msg.Id);
             if (temp == null)
                 return BadRequest("Not found Message");
             temp.IsOpened = true;
@@ -63,67 +65,149 @@ namespace OmegaProject.Controllers
 
 
         [HttpGet]
-        [Route("GetMessagesBySender")]
-        public IActionResult GetMessagesBySender()
+        [Route("GetMessagesBySender/{idReciver}")]
+        public IActionResult GetMessagesBySender(int idReciver)
         {
             int id = int.Parse(jwt.GetTokenClaims());
             var user = db.Users.FirstOrDefault(d => d.Id == id);
             List<Message> msgs = null;
             if (user.RoleId == 1)
-             
-                msgs = db.Messages
-                    //GroupBy(x => new { x.SenderId, x.Title, x.Contents, x.SendingDate })
-                    .GroupBy(x => new { x.Contents,x.SenderId,x.SendingDate })
-                    .Select(r => new Message
-                    {
-                        SenderId=r.Key.SenderId,
-                        Contents=r.Key.Contents,
-                        SendingDate=r.Key.SendingDate,
-                    }).ToList();
+                msgs = db
+                    .Messages
+                    .OrderByDescending(d => d.SendingDate)
+                    .Where(d => d.ReciverId == idReciver)
+                    .ToList();
             else
-                msgs = db.Messages.Include(msg=>msg.Reciver).Where(msg => msg.SenderId == id).ToList();
+                msgs = db.Messages.Include(msg => msg.Reciver)
+                    .OrderByDescending(d => d.SendingDate)
+                    .Where(msg => msg.SenderId == id).ToList();
 
-            msgs.Reverse();
             return Ok(msgs);
 
         }
 
         [HttpGet]
-        [Route("GetMessagesByReciver/{idReciver}")]
-        public IActionResult GetMessagesByReciver(int idReciver)
+        [Route("GetMessagesByReciver/{idReciver}/{current_messages}")]
+        public async Task<IActionResult> GetMessagesByReciverAsync(int idReciver,int current_messages)
         {
             int id = int.Parse(jwt.GetTokenClaims());
-            var msgs = db.Messages.Include(q=>q.Sender).Where(x => 
-            (x.ReciverId == idReciver && x.SenderId == id)||
+            //if this a sender or reciver get all messages between each other
+
+            var msgs = await db.Messages.Include(q => q.Sender)
+                .Where(x =>
+            (x.ReciverId == idReciver && x.SenderId == id) ||
             (x.ReciverId == id && x.SenderId == idReciver)
-            ).ToList();
-            //msgs.Reverse();
-            return Ok(msgs);
+            ).ToListAsync();
+
+            bool found_previous = msgs.SkipLast(current_messages).Count()>0? true:false;
+            dynamic eo = new ExpandoObject();
+            eo.found_previous = found_previous;
+            eo.messages= msgs.TakeLast(1);
+            return Ok(eo);
         }
+        [HttpGet]
+        [Route("GetPreviousMessages/{idReciver}/{current_messages}")]
+        public async Task<IActionResult> GetPreviousMessages(int idReciver,int current_messages)
+        {
+            int id = int.Parse(jwt.GetTokenClaims());
+            //if this a sender or reciver get all messages between each other
+
+            var msgs = await db.Messages.Include(q => q.Sender)
+                .Where(x =>
+            (x.ReciverId == idReciver && x.SenderId == id) ||
+            (x.ReciverId == id && x.SenderId == idReciver)
+            ).ToListAsync();
+            int count = msgs.Count();
+            bool found_previous = msgs.SkipLast(current_messages).Count() > 0 ? true : false;
+            dynamic eo = new ExpandoObject();
+            eo.found_previous = found_previous;
+            eo.messages = msgs.SkipLast(current_messages).TakeLast(1);
+            return Ok(eo);
+        }
+
         [HttpGet]
         [Route("GetAllUnreadMessages")]
-        public IActionResult GetAGetAllUnreadMessagesll()
+        public IActionResult GetAllUnreadMessages()
         {
+
             int id = int.Parse(jwt.GetTokenClaims());
 
-            return Ok(db.Messages.Where(f=>!f.IsOpened && f.ReciverId==id));
-        }
-        [HttpGet]
-        [Route("ReadMessage/{id}")]
-        public IActionResult ReadMessage(int id)
-        {
-            var msg = db.Messages.FirstOrDefault(q=>q.Id==id);
-            msg.IsOpened = true;
-            try
+            //get all groups of this user
+            var UsersGroups =  db.UsersGroups.Include(f=>f.Group).Where(f => f.UserId == id).ToList();
+
+            //get msgs that not user sent to group
+            var msgsGropup = db.GroupMessages
+                .Include(f=>f.OpendGroupMessages)
+                .Where(mg =>
+                mg.SenderId!=id 
+                //&&
+                //UsersGroups.Any(f=>f.GroupId==mg.GroupId)
+                )
+                .ToList();
+
+            //Get All Opend GroupMessages
+            var opendGroupMessages = db.OpendGroupMessages.Where(f => f.UserId == id);
+
+            List<ExpandoObject> temp = new List<ExpandoObject>();
+
+            msgsGropup.ForEach(msg =>
             {
-                db.SaveChanges();
-            }
-            catch
+                var foundOpenedMessage = opendGroupMessages.FirstOrDefault(f => f.MessageId == msg.Id && f.UserId == id);
+
+                if (foundOpenedMessage == null)
+                {
+                    dynamic _msg = new ExpandoObject();
+                    _msg.id = msg.Id;
+                    _msg.senderId = msg.SenderId;
+                    _msg.contents = msg.Contents;
+                    _msg.isOpened = false;
+                    _msg.reciverId = msg.GroupId;
+                    _msg.sendingDate = msg.SendingDate;
+                    _msg.isGroup = true;
+                    temp.Add(_msg);
+                }
+
+            });
+
+
+            var msgs = db.Messages
+                .Where(q => !q.IsOpened && q.ReciverId == id).ToList();
+
+            msgs.ForEach(msg =>
             {
-                return BadRequest("Filad Changing status of message");
-            }
-            return Ok("Message Changed Succesfully");
+                dynamic _msg = new ExpandoObject();
+                _msg.id = msg.Id;
+                _msg.senderId = msg.SenderId;
+                _msg.contents = msg.Contents;
+                _msg.isOpened = false;
+                _msg.reciverId = msg.ReciverId;
+                _msg.sendingDate = msg.SendingDate;
+                _msg.isGroup = false;
+                temp.Add(_msg);
+
+            });
+
+            return Ok(temp);
         }
 
+        [HttpGet]
+        [Route("GetUnreadMessages/{senderId}")]
+        public async Task<IActionResult> GetUnreadMessages(int senderId)
+        {
+            int id = int.Parse(jwt.GetTokenClaims());
+            var msgs = await db.Messages
+                .Where(q => !q.IsOpened && q.ReciverId == id && q.SenderId == senderId).ToListAsync();
+            return Ok(msgs);
+        }
+
+        [HttpGet]
+        [Route("ReadMessage/{id}")]
+        public async Task<IActionResult> ReadMessageAsync(int id)
+        {
+            var msg = await db.Messages.FirstOrDefaultAsync(f => f.Id == id);
+            msg.IsOpened = true;
+            await db.SaveChangesAsync();
+            return Ok("message status changed successfully");
+        }
     }
 }

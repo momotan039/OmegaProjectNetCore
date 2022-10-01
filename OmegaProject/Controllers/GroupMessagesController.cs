@@ -32,13 +32,25 @@ namespace OmegaProject.Controllers
             return StatusCode(200);
         }
         [HttpGet]
-        [Route("GetMessagesByReciver/{idReciver}")]
-        public IActionResult GetMessagesByReciver(int idReciver)
+        [Route("GetMessagesByReciver/{groupId}")]
+        public IActionResult GetMessagesByReciver(int groupId)
         {
             int id = int.Parse(jwt.GetTokenClaims());
+
             var msgs = db.GroupMessages.Include(q => q.Sender).Where(x =>
-              (x.GroupId == idReciver)).ToList();
-            //msgs.Reverse();
+              (x.GroupId == groupId)).Include(f => f.OpendGroupMessages).ToList();
+
+            //Get All Opend GroupMessages
+            var opendGroupMessages = db.OpendGroupMessages.Where(f => f.UserId == id);
+
+
+            msgs.ForEach(msg =>
+            {
+                var foundOpenedMessage = opendGroupMessages.FirstOrDefault(f => f.MessageId == msg.Id && f.UserId == id);
+                if (foundOpenedMessage != null)
+                    msg.IsOpened = true;
+            });
+
             return Ok(msgs);
         }
         [HttpDelete]
@@ -51,6 +63,27 @@ namespace OmegaProject.Controllers
             db.GroupMessages.Remove(msg);
             db.SaveChanges();
             return StatusCode(200);
+        }
+
+        [HttpGet]
+        [Route("ReadMessage/{id}/{userId}")]
+        public IActionResult ReadMessageAsync(int id, int userId)
+        {
+            var msg = db.OpendGroupMessages.FirstOrDefault(f => f.UserId == userId && id == f.MessageId);
+            if (msg != null)
+                return Ok();
+
+            msg = new OpendGroupMessage { UserId = userId, MessageId = id };
+            db.OpendGroupMessages.Add(msg);
+            db.SaveChanges();
+            return Ok("message status changed successfully");
+        }
+
+        [HttpGet]
+        [Route("GetAllOpendGroupMessages")]
+        public IActionResult GetAllOpendGroupMessages()
+        {
+            return Ok(db.OpendGroupMessages);
         }
     }
 }

@@ -13,6 +13,7 @@ namespace OmegaProject.services
         public DbSet<Role> Role { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<GroupMessage> GroupMessages { get; set; }
+        public DbSet<OpendGroupMessage> OpendGroupMessages { get; set; }
         public DbSet<Course> Courses { get; set; }
         public DbSet<Grade> Grades { get; set; }
         public DbSet<Test> Tests { get; set; }
