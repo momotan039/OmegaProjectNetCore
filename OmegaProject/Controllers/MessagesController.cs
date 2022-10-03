@@ -19,7 +19,7 @@ namespace OmegaProject.Controllers
     {
         public MyDbContext db;
         private readonly JwtService jwt;
-        static int countMessages = 1;
+         int totalMessages = 20;
         public MessagesController(MyDbContext _db, JwtService jwt)
         {
             db = _db;
@@ -64,27 +64,27 @@ namespace OmegaProject.Controllers
         }
 
 
-        [HttpGet]
-        [Route("GetMessagesBySender/{idReciver}")]
-        public IActionResult GetMessagesBySender(int idReciver)
-        {
-            int id = int.Parse(jwt.GetTokenClaims());
-            var user = db.Users.FirstOrDefault(d => d.Id == id);
-            List<Message> msgs = null;
-            if (user.RoleId == 1)
-                msgs = db
-                    .Messages
-                    .OrderByDescending(d => d.SendingDate)
-                    .Where(d => d.ReciverId == idReciver)
-                    .ToList();
-            else
-                msgs = db.Messages.Include(msg => msg.Reciver)
-                    .OrderByDescending(d => d.SendingDate)
-                    .Where(msg => msg.SenderId == id).ToList();
+        //[HttpGet]
+        //[Route("GetMessagesBySender/{idReciver}")]
+        //public IActionResult GetMessagesBySender(int idReciver)
+        //{
+        //    int id = int.Parse(jwt.GetTokenClaims());
+        //    var user = db.Users.FirstOrDefault(d => d.Id == id);
+        //    List<Message> msgs = null;
+        //    if (user.RoleId == 1)
+        //        msgs = db
+        //            .Messages
+        //            .OrderByDescending(d => d.SendingDate)
+        //            .Where(d => d.ReciverId == idReciver)
+        //            .ToList();
+        //    else
+        //        msgs = db.Messages.Include(msg => msg.Reciver)
+        //            .OrderByDescending(d => d.SendingDate)
+        //            .Where(msg => msg.SenderId == id).ToList();
 
-            return Ok(msgs);
+        //    return Ok(msgs);
 
-        }
+        //}
 
         [HttpGet]
         [Route("GetMessagesByReciver/{idReciver}/{current_messages}")]
@@ -99,10 +99,14 @@ namespace OmegaProject.Controllers
             (x.ReciverId == id && x.SenderId == idReciver)
             ).ToListAsync();
 
+            if (current_messages == 0)
+                current_messages = totalMessages;
+
             bool found_previous = msgs.SkipLast(current_messages).Count()>0? true:false;
+
             dynamic eo = new ExpandoObject();
             eo.found_previous = found_previous;
-            eo.messages= msgs.TakeLast(1);
+            eo.messages= msgs.TakeLast(totalMessages);
             return Ok(eo);
         }
         [HttpGet]
@@ -117,11 +121,9 @@ namespace OmegaProject.Controllers
             (x.ReciverId == idReciver && x.SenderId == id) ||
             (x.ReciverId == id && x.SenderId == idReciver)
             ).ToListAsync();
-            int count = msgs.Count();
-            bool found_previous = msgs.SkipLast(current_messages).Count() > 0 ? true : false;
             dynamic eo = new ExpandoObject();
-            eo.found_previous = found_previous;
-            eo.messages = msgs.SkipLast(current_messages).TakeLast(1);
+            eo.found_previous = msgs.SkipLast(current_messages +totalMessages).Count() > 0 ? true : false;
+            eo.messages = msgs.SkipLast(current_messages).TakeLast(totalMessages);
             return Ok(eo);
         }
 

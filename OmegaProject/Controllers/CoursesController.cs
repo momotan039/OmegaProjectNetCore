@@ -92,8 +92,8 @@ namespace OmegaProject.Controllers
             var temp = db.Courses.FirstOrDefault(x => x.Id == course.Id);
             if (temp == null)
                 return NotFound("Faild Editing ...This Course not Exist !!");
-            temp=db.Courses.FirstOrDefault(f=>f.Name==course.Name);
-            if (temp != null)
+            var temp2=db.Courses.FirstOrDefault(f=>f.Name==course.Name);
+            if (temp2 != null)
                 return BadRequest("Faild Editing ...Course with same Name Already Exist !!");
             temp.Name = course.Name;
             db.SaveChanges();

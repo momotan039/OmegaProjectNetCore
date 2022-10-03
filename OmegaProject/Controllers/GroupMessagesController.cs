@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OmegaProject.Entity;
 using OmegaProject.services;
+using System.Dynamic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace OmegaProject.Controllers
 {
@@ -15,7 +17,7 @@ namespace OmegaProject.Controllers
     {
         private readonly MyDbContext db;
         private readonly JwtService jwt;
-
+        int totalMessages = 20;
         public GroupMessagesController(MyDbContext _db, JwtService jwt)
         {
             db = _db;
@@ -32,8 +34,8 @@ namespace OmegaProject.Controllers
             return StatusCode(200);
         }
         [HttpGet]
-        [Route("GetMessagesByReciver/{groupId}")]
-        public IActionResult GetMessagesByReciver(int groupId)
+        [Route("GetMessagesByReciver/{groupId}/{current_messages}")]
+        public IActionResult GetMessagesByReciver(int groupId, int current_messages)
         {
             int id = int.Parse(jwt.GetTokenClaims());
 
@@ -51,8 +53,46 @@ namespace OmegaProject.Controllers
                     msg.IsOpened = true;
             });
 
-            return Ok(msgs);
+            if (current_messages == 0)
+                current_messages = totalMessages;
+
+            bool found_previous = msgs.SkipLast(current_messages).Count() > 0 ? true : false;
+
+            dynamic eo = new ExpandoObject();
+            eo.found_previous = found_previous;
+            eo.messages = msgs.TakeLast(totalMessages);
+            return Ok(eo);
+
+            //return Ok(msgs);
         }
+
+        [HttpGet]
+        [Route("GetPreviousMessages/{groupId}/{current_messages}")]
+        public async Task<IActionResult> GetPreviousMessages(int groupId, int current_messages)
+        {
+            int id = int.Parse(jwt.GetTokenClaims());
+            //if this a sender or reciver get all messages between each other
+
+            var msgs = db.GroupMessages.Include(q => q.Sender).Where(x =>
+              (x.GroupId == groupId)).Include(f => f.OpendGroupMessages).ToList();
+
+            //Get All Opend GroupMessages
+            var opendGroupMessages = db.OpendGroupMessages.Where(f => f.UserId == id);
+
+
+            msgs.ForEach(msg =>
+            {
+                var foundOpenedMessage = opendGroupMessages.FirstOrDefault(f => f.MessageId == msg.Id && f.UserId == id);
+                if (foundOpenedMessage != null)
+                    msg.IsOpened = true;
+            });
+
+            dynamic eo = new ExpandoObject();
+            eo.found_previous = msgs.SkipLast(current_messages + totalMessages).Count() > 0 ? true : false;
+            eo.messages = msgs.SkipLast(current_messages).TakeLast(totalMessages);
+            return Ok(eo);
+        }
+
         [HttpDelete]
         [Route("DeleteMessage/{id}")]
         public IActionResult DeleteMessage(int id)
