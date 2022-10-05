@@ -63,7 +63,7 @@ namespace OmegaProject.Controllers
         [Route("GetGroupsByCourseId/{id}")]
         public IActionResult GetGroupsByCourseId(int id)
         {
-            var groups = db.Groups.Where(q => q.CourseId == id).ToList();
+            var groups = db.Groups.Include(q=>q.UserGroups).Where(q => q.CourseId == id).ToList();
             //get all groups that Teaching this Topic
 
             return Ok(groups);
