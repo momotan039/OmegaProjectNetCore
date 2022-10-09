@@ -16,7 +16,7 @@ namespace OmegaProject.DTO
         public int RoleId { get; set; }
         public string IdCard { get; set; }
         public bool ConfirmPassword { get; set; }
-
+        public string ImageProfile { get; set; }
        //public virtual int GroupId { get; set; }
 
         public virtual Role Role { get; set; }

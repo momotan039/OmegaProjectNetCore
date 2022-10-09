@@ -155,7 +155,7 @@ namespace OmegaProject.Controllers
         [HttpPut]
         [Route("EditHomeWork")]
 
-        public IActionResult EditHomeWork(IFormFile[] files)
+        public async Task<IActionResult> EditHomeWork(IFormFile[] files)
         {
             string path = Path.Combine(hosting.WebRootPath, "HomeWork",
                   "Teachers");
@@ -164,9 +164,11 @@ namespace OmegaProject.Controllers
             bool modeBeforeChnge = false;
             int id = int.Parse(HttpContext.Request.Form["id"]);
 
-            var homeWork = db.HomeWorks.FirstOrDefault(f => f.Id == id);
+            var homeWork =await db.HomeWorks.FirstOrDefaultAsync(f => f.Id == id);
+
             if (homeWork == null)
                 return NotFound("Not Found HomeWork");
+
             modeBeforeChnge = homeWork.RequiredSubmit;
 
             homeWork.Title = HttpContext.Request.Form["title"];
@@ -175,7 +177,7 @@ namespace OmegaProject.Controllers
             homeWork.TeacherId = int.Parse(HttpContext.Request.Form["teacherId"]);
             modeAfterChange = bool.Parse(HttpContext.Request.Form["requiredSubmit"]);
             homeWork.RequiredSubmit = modeAfterChange;
-            db.SaveChanges();
+            await db.SaveChangesAsync();
 
             //if change Requied Submit to false 
             //Delete all realated Submite Homeworks and Files
@@ -187,8 +189,8 @@ namespace OmegaProject.Controllers
                     Path.Combine(hosting.WebRootPath, "HomeWork", "Submited", $"{homeWork.GroupId}"));
 
                 db.HomeWorkStudents.RemoveRange(homeworksStududents);
-                db.SaveChanges();
-                
+                await db.SaveChangesAsync();
+
             }
 
             //check if Change or remove recent uploaded Files
@@ -237,19 +239,20 @@ namespace OmegaProject.Controllers
                 catch (Exception r)
                 {
                     db.HomeWorks.Remove(homeWork);
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
                     return BadRequest("Occured Error While Saving...Try Again");
                 }
             }
             //save last changes => files path
-            db.SaveChanges();
+            await db.SaveChangesAsync();
             return Ok("Home Work Edited Successfully");
         }
         [HttpGet]
         [Route("GetHomeWork/{id?}")]
         public IActionResult GetHomeWork(int id = -1)
         {
-            //var imagesFolder = Path.Combine(hosting.WebRootPath, "HomeWork",
+            //var
+            //sFolder = Path.Combine(hosting.WebRootPath, "HomeWork",
             //        "Images");
             //foreach (var file in Directory.GetFiles(imagesFolder))
             //{

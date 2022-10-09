@@ -13,11 +13,10 @@ namespace OmegaProject
 {
     public class Startup
     {
-        public static  IHostEnvironment hostEnvironment;
-
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+        
         }
 
         public IConfiguration Configuration { get; }
@@ -34,7 +33,10 @@ namespace OmegaProject
             //Configure cors in service
             services.AddCors(option => option.AddPolicy("myPolicy", builder =>
             {
-                builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                 builder.WithOrigins("http://localhost:4200", "https://omegaangular.firebaseapp.com")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+                //builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
             }));
 
             //to fix json lenth depth
@@ -83,25 +85,30 @@ namespace OmegaProject
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+
+            MyTools.ImagesRoot = System.IO.Path.Combine(env.WebRootPath, "Images");
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
-
+            app.UseStaticFiles();
 
             app.UseHttpsRedirection();
 
             app.UseRouting();
-
+            //cors must be between routing and authentication
+            app.UseCors("myPolicy");
             app.UseAuthentication();
             app.UseAuthorization();
             //Configure cors in http
 
-            app.UseCors("myPolicy");
 
             app.UseEndpoints(endpoints =>
             {
+               
+
                 endpoints.MapControllers();
             });
 

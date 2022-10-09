@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OmegaProject.DTO;
 using OmegaProject.services;
+using System.IO;
 using System.Linq;
 
 namespace OmegaProject.Controllers
@@ -51,6 +53,85 @@ namespace OmegaProject.Controllers
             return BadRequest("Occured Error While Sending Link to Mail!!");
 
             return Ok("Link Sended to Mail Successfully!");
+        }
+
+
+        [HttpPut]
+        [Route("EditImageProfile")]
+        public IActionResult EditImageProfile(IFormFile image)
+        {
+            if (image == null)
+                return BadRequest("Image is null");
+
+            User user = db.Users.FirstOrDefault(g => g.Id == int.Parse(jwt.GetTokenClaims()));
+
+            if (user == null)
+                return BadRequest("Not Found User");
+
+            //check Exist Folder Images
+            if (!Directory.Exists(MyTools.ImagesRoot))
+                Directory.CreateDirectory(MyTools.ImagesRoot);
+
+            string Image_path = Path.Combine(MyTools.ImagesRoot, "Users");
+
+            //check Exist Folder Images for Users
+            if (!Directory.Exists(Image_path))
+                Directory.CreateDirectory(Image_path);
+
+            //set image name by user id
+            string imageName = user.Id + Path.GetExtension(image.FileName);
+
+            Image_path = Path.Combine(Image_path, imageName);
+
+            using (var fs = new FileStream(Image_path, FileMode.Create))
+            {
+                image.CopyTo(fs);
+            }
+
+            //save path image to Database
+            user.ImageProfile = "/Images/Users/" + imageName;
+            db.SaveChanges();
+            return Ok("Your Image Changed Successfully");
+        }
+
+
+        [HttpPut]
+        [Route("EditImageProfileGroup")]
+        public IActionResult EditImageProfileGroup(IFormFile image)
+        {
+            if (image == null)
+                return BadRequest("Image is null");
+
+            int id_group = int.Parse(HttpContext.Request.Form["idGroup"]);
+            Group group = db.Groups.FirstOrDefault(g => g.Id == id_group);
+
+            if(group==null)
+                return BadRequest("Not Found Group");
+
+            //check Exist Folder Images
+            if (!Directory.Exists(MyTools.ImagesRoot))
+                Directory.CreateDirectory(MyTools.ImagesRoot);
+            
+            string Image_path = Path.Combine(MyTools.ImagesRoot, "Groups");
+
+            //check Exist Folder Images for groups
+            if (!Directory.Exists(Image_path))
+                Directory.CreateDirectory(Image_path);
+
+            //set image name by group id
+            string imageName = id_group + Path.GetExtension(image.FileName);
+
+            Image_path = Path.Combine(Image_path,imageName);
+
+            using (var fs = new FileStream(Image_path,FileMode.Create))
+            {
+                    image.CopyTo(fs);
+            }
+
+            //save path image to Database
+            group.ImageProfile = "/Images/Groups/" + imageName;
+            db.SaveChanges();
+            return Ok("Group Image Changed Successfully");
         }
     }
 }

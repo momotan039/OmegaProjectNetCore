@@ -8,6 +8,8 @@ namespace OmegaProject.services
 {
     public partial class MyTools 
     {
+        public static string ImagesRoot { get; internal set; }
+
 
         public static string GenerateHashedPassword()
         {
@@ -20,5 +22,6 @@ namespace OmegaProject.services
             var x = SHA256.Create().ComputeHash(Encoding.Default.GetBytes(pass));
             return Convert.ToBase64String(x);
         }
+
     }
 }

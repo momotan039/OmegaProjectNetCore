@@ -1,13 +1,16 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
 using OmegaProject.services;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace OmegaProject.Controllers
 {
+    [EnableCors("myPolicy")]
     [Route("api/[controller]")]
     [ApiController]
     public class AuthenticationController : ControllerBase
@@ -23,10 +26,10 @@ namespace OmegaProject.Controllers
 
         [HttpPost]
         [Route("Login")]
-        public IActionResult Login([FromBody]UserLogInDTO u)
+        public async Task<IActionResult> Login([FromBody]UserLogInDTO u)
         {
             string storedPassword=MyTools.CreateHashedPassword(u.Password);
-            var user = db.Users.FirstOrDefault(x => x.Email==u.Email);
+            var user =await db.Users.FirstOrDefaultAsync(x => x.Email==u.Email);
 
             if (user == null)
                 return NotFound("This User Not Exist");

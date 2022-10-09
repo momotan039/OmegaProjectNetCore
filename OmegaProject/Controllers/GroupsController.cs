@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace OmegaProject.Controllers
 {
@@ -30,7 +31,7 @@ namespace OmegaProject.Controllers
 
         [HttpGet]
         [Route("GetGroupsByUserId/{id?}")]
-        public IActionResult GetGroupsByUserId(int id = -1)
+        public async Task<IActionResult> GetGroupsByUserIdAsync(int id = -1)
         {
             if (id == -1)
                 id = int.Parse(jwt.GetTokenClaims());
@@ -51,12 +52,19 @@ namespace OmegaProject.Controllers
             //get all groups that contain this user
 
 
-            db.UsersGroups.Where(ug => ug.UserId == id).ToList().ForEach(ug =>
-            {
-                //get group from ug id and insert it to groups list
-                groups.Add(db.Groups.Include(g => g.Course).First(g => g.Id == ug.GroupId));
-            });
-            return Ok(groups);
+            //db.UsersGroups.Where(ug => ug.UserId == id).ToList().ForEach(ug =>
+            //{
+            //    //get group from ug id and insert it to groups list
+            //    groups.Add(db.Groups.Include(g => g.Course).First(g => g.Id == ug.GroupId));
+            //});
+            var groups2 = db.Groups
+                .Include(q => q.Course)
+                .Include(q => q.UserGroups)
+                .ThenInclude(q => q.User)
+                .Where(q => q.UserGroups.Any(f => f.UserId!=id &&  f.User.RoleId != 1)).ToList()
+                ;
+
+            return Ok(groups2);
         }
 
         [HttpGet]
