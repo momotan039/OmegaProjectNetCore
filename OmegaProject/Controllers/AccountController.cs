@@ -79,8 +79,9 @@ namespace OmegaProject.Controllers
                 Directory.CreateDirectory(Image_path);
 
             //set image name by user id
-            string imageName = user.Id + Path.GetExtension(image.FileName);
-
+            //string imageName = user.Id+Path.GetFileNameWithoutExtension(image.FileName) + Path.GetExtension(image.FileName);
+            string imageName = user.Id+ Path.GetExtension(image.FileName);
+           
             Image_path = Path.Combine(Image_path, imageName);
 
             using (var fs = new FileStream(Image_path, FileMode.Create))
@@ -132,6 +133,22 @@ namespace OmegaProject.Controllers
             group.ImageProfile = "/Images/Groups/" + imageName;
             db.SaveChanges();
             return Ok("Group Image Changed Successfully");
+        }
+
+        private string CustomizeImageFile(string ImageName,string ImageProfile)
+        {
+            string ext = Path.GetExtension(ImageName);
+            int i = 1;
+            while (true)
+            {
+                ImageName = Path.GetFileNameWithoutExtension(ImageName);//f.text
+                if (i == 1)
+                    ImageName += "_1";
+                else
+                    ImageName = ImageName.Replace($"_{i - 1}", $"_{i}");
+                ImageName += ext;
+                i++;
+            }
         }
     }
 }

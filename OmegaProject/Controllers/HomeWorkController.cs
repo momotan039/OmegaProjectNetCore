@@ -9,6 +9,7 @@ using OmegaProject.services;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity.Infrastructure;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -120,6 +121,7 @@ namespace OmegaProject.Controllers
 
             if (!System.IO.File.Exists(Path.Combine(mainRoot, file)))
                 return Path.Combine(mainRoot, file);
+
             string ext = Path.GetExtension(file);
             int i = 1;
             while (true)
@@ -268,11 +270,24 @@ namespace OmegaProject.Controllers
         [Route("GetHomeWorkByTeacherId/{id}")]
         public IActionResult GetHomeWorkByTeacherId(int id)
         {
-            return Ok(db.HomeWorks.
+            dynamic hws = new List<ExpandoObject>();
+            var hwsList = db.HomeWorks.
                 Include(q => q.Group).
                 Where(w => w.TeacherId == id).
                 OrderByDescending(q => q.SendingDate).
-                ToList());
+                ToList();
+                //.ForEach(f =>
+                //{
+                //    dynamic hw=new ExpandoObject();
+                //    hw.teacherId = id;
+                //    hw.title = f.Title;
+                //    hw.sendingDate = f.SendingDate;
+                //    hw.group = f.Group;
+                //    hw.id = f.Id;
+                //    hw.requiredSubmit = f.RequiredSubmit?"Yes":"No";
+                //    hws.Add(hw);
+                //});
+            return Ok(hwsList);
         }
 
         [HttpGet]
