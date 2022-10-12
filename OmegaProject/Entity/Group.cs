@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OmegaProject.Entity;
+using System;
 using System.Collections.Generic;
 
 namespace OmegaProject.DTO
@@ -14,7 +15,7 @@ namespace OmegaProject.DTO
 
         public virtual Course Course { get; set; }
         public virtual ICollection<UserGroup> UserGroups { get; set; }
-        //public virtual ICollection<User> Users { get; set; }
-        //public virtual List<UserGroup> UserRelation { get; set; }
+
+        public virtual ICollection<GroupMessage> GroupMessages { get; set; }
     }
 }

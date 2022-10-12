@@ -4,7 +4,7 @@ using System;
 
 namespace OmegaProject.services
 {
-   
+
     public partial class MyTools
     {
         private static string mainStyle = @"<style>
@@ -56,7 +56,7 @@ namespace OmegaProject.services
             msg.Body = new TextPart(MimeKit.Text.TextFormat.Html)
             {
                 Text = @"<html>
-                            "+ mainStyle + @"
+                            " + mainStyle + @"
                             <body>
                             <h1>Welcome to the <span style='color:orange'>Omega Academy</span> Family</h1>
                             Your account has been created successfully
@@ -69,9 +69,9 @@ namespace OmegaProject.services
             return SendMail(msg);
         }
 
-      
 
-       
+
+
 
         public static bool SendResetPassMail(string token, string reciverMail)
         {
@@ -86,10 +86,11 @@ namespace OmegaProject.services
                             " + mainStyle + @"
                             <body>
                             All you have to do Now ,  in order to  reset your password is navigate the following link
-                            <a class='button' href='" + link + @"'>Confirm Regestriation</a>
+                            <a class='button' href='" + link + @"'>Reset Now</a>
                             </body>
                         </html>"
             };
+
 
             return SendMail(msg);
         }

@@ -52,7 +52,7 @@ namespace OmegaProject.Controllers
             if(!success)
             return BadRequest("Occured Error While Sending Link to Mail!!");
 
-            return Ok("Link Sended to Mail Successfully!");
+            return Ok("Link Sended to Mail Successfully!!\nPlease Cheak Your Mail");
         }
 
 

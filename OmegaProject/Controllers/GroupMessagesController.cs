@@ -100,6 +100,9 @@ namespace OmegaProject.Controllers
             var msg = db.GroupMessages.FirstOrDefault(d => d.Id == id);
             if (msg == null)
                 return NotFound("Message Not Found");
+
+            //First Remote All Opend Group Messages
+            db.OpendGroupMessages.RemoveRange(db.OpendGroupMessages.Where(q => q.MessageId == id));
             db.GroupMessages.Remove(msg);
             db.SaveChanges();
             return StatusCode(200);

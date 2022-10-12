@@ -82,8 +82,8 @@ namespace OmegaProject.Controllers
             int id = int.Parse(jwtService.GetTokenClaims());
             var user=db.Users.SingleOrDefault(ug=>ug.Id == id);
 
-            if (user.RoleId==1)
-                return Ok(db.Users.Where(u=>u.Id!=id && u.RoleId!=3).ToList());
+            if (user.RoleId==1)         
+                return Ok(db.Users.Where(u=>u.Id!=id).ToList());
            
             //get all groups that referenc to user
             var ugs = db.UsersGroups.Where(g => g.UserId == id).ToList();

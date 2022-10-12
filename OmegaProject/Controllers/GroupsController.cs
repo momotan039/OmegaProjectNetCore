@@ -6,6 +6,7 @@ using OmegaProject.DTO;
 using OmegaProject.services;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -42,10 +43,28 @@ namespace OmegaProject.Controllers
                 return NotFound("User Not Exist");
 
             var groups = new List<Group>();
+
+            dynamic groupsList = new List<ExpandoObject>();
             if (user.RoleId == 1)
             {
-                var gs = db.Groups.Include(g => g.Course).ToList();
-                return Ok(gs);
+                 db.Groups.Include(g => g.Course)
+                      .Include(q => q.GroupMessages)
+                    .OrderByDescending(f=>f.OpeningDate).ToList().ForEach
+                    (f =>{
+                        dynamic g=new ExpandoObject();
+                        g.id = f.Id;
+                        g.name = f.Name;
+                        g.imageProfile = f.ImageProfile;
+                        g.course = f.Course;
+                        g.courseId = f.CourseId;
+                        g.openingDate = f.OpeningDate;
+                        g.closingDate = f.ClosingDate;
+                        //g.lastMessageDate=db.GroupMessages.Last();
+                        groupsList.Add(g);
+
+                        });
+
+                return Ok(groupsList);
 
             }
 
@@ -59,10 +78,10 @@ namespace OmegaProject.Controllers
             //});
             var groups2 = db.Groups
                 .Include(q => q.Course)
+                 .Include(q => q.GroupMessages)
                 .Include(q => q.UserGroups)
                 .ThenInclude(q => q.User)
-                .Where(q => q.UserGroups.Any(f => f.UserId!=id &&  f.User.RoleId != 1)).ToList()
-                ;
+                .Where(q => q.UserGroups.Any(f =>f.UserId==id)).ToList();
 
             return Ok(groups2);
         }
@@ -81,11 +100,15 @@ namespace OmegaProject.Controllers
 
         [HttpGet]
         [Route("GetGroups")]
-        public IActionResult GetGroupes()
+        public async Task<IActionResult> GetGroupes()
         {
-            return Ok(db.Groups.Include(g => g.Course).
-                Include(g => g.UserGroups).
-                ThenInclude(d => d.User).ToList());
+            var result = await db.Groups.
+                Include(g => g.Course)
+                .Include(g => g.UserGroups)
+                //.ThenInclude(d => d.User)
+                .OrderByDescending(f => f.OpeningDate).ToListAsync();
+
+            return Ok(result);
         }
 
         [HttpGet]
@@ -124,7 +147,7 @@ namespace OmegaProject.Controllers
         {
 
             //check if user Existed
-            var temp = db.Groups.FirstOrDefault(x => x.Id == id);
+            var temp = db.Groups.Include(q=>q.GroupMessages).FirstOrDefault(x => x.Id == id);
             if (temp == null)
                 return NotFound("Faild Deleted ...This Group not Exist !!");
 
@@ -148,6 +171,11 @@ namespace OmegaProject.Controllers
             //    System.IO.File.Delete(file);
             //}
             //delete this group
+            //First Delete All opened Group Messages
+            temp.GroupMessages.ToList().ForEach(m =>
+            {
+                db.OpendGroupMessages.RemoveRange(db.OpendGroupMessages.Where(f=>f.MessageId==m.Id));
+            });
             db.Groups.Remove(temp);
             db.SaveChanges();
             return Ok("Group Deleted Successfully");

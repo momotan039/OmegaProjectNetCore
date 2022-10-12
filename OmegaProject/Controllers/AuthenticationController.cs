@@ -35,7 +35,7 @@ namespace OmegaProject.Controllers
                 return NotFound("This User Not Exist");
 
             if (user.Password !=storedPassword)
-                return NotFound("Entered Wrong Password!!");
+                return NotFound("Entered Wrong Password !!");
 
             //Response.Cookies.Append("token", 
             //    jwt.GenerateToken(user.Id + "", user.RoleId == 1 ? true : false,null),
