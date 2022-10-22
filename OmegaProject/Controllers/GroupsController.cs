@@ -48,7 +48,7 @@ namespace OmegaProject.Controllers
             if (user.RoleId == 1)
             {
                  db.Groups.Include(g => g.Course)
-                      .Include(q => q.GroupMessages)
+                      //.Include(q => q.GroupMessages)
                     .OrderByDescending(f=>f.OpeningDate).ToList().ForEach
                     (f =>{
                         dynamic g=new ExpandoObject();
@@ -63,7 +63,6 @@ namespace OmegaProject.Controllers
                         groupsList.Add(g);
 
                         });
-
                 return Ok(groupsList);
 
             }
@@ -78,9 +77,7 @@ namespace OmegaProject.Controllers
             //});
             var groups2 = db.Groups
                 .Include(q => q.Course)
-                 .Include(q => q.GroupMessages)
                 .Include(q => q.UserGroups)
-                .ThenInclude(q => q.User)
                 .Where(q => q.UserGroups.Any(f =>f.UserId==id)).ToList();
 
             return Ok(groups2);
@@ -90,7 +87,7 @@ namespace OmegaProject.Controllers
         [Route("GetGroupsByCourseId/{id}")]
         public IActionResult GetGroupsByCourseId(int id)
         {
-            var groups = db.Groups.Include(q=>q.UserGroups).Where(q => q.CourseId == id).ToList();
+            var groups = db.Groups.Include(q=>q.Course).Where(q => q.CourseId == id).ToList();
             //get all groups that Teaching this Topic
 
             return Ok(groups);
@@ -105,8 +102,9 @@ namespace OmegaProject.Controllers
             var result = await db.Groups.
                 Include(g => g.Course)
                 .Include(g => g.UserGroups)
-                //.ThenInclude(d => d.User)
-                .OrderByDescending(f => f.OpeningDate).ToListAsync();
+                .ThenInclude(d => d.User)
+                .OrderByDescending(f => f.OpeningDate)
+                .ToListAsync();
 
             return Ok(result);
         }

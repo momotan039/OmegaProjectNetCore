@@ -43,7 +43,7 @@ namespace OmegaProject.Controllers
             if (user == null)
                 return NotFound("User Not Exist!!");
 
-            string token=jwt.GenerateToken(u.Email, false,new System.TimeSpan(0,5,0));
+            string token=jwt.GenerateToken(u.Email, false,new System.TimeSpan(0,1,0));
 
             token = token.Replace("Bearer ", "");
 

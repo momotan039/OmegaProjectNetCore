@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
 using OmegaProject.services;
+using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 
 namespace OmegaProject.Controllers
@@ -40,8 +42,18 @@ namespace OmegaProject.Controllers
                 Include(f=>f.Group).
                 Where(f => f.Test.Id == testId).
                 ToList();
-
-            return Ok(grades);
+            List<dynamic> objs = new List<dynamic>();
+            grades.ForEach(f =>
+            {
+                dynamic obj = new ExpandoObject();
+                obj.student = new { idCard = f.Student.IdCard };
+                obj.group = new {name=f.Group.Name};
+                obj.sumGrade = f.SumGrade;
+                objs.Add(obj);
+            });
+            
+            return Ok(objs);
+            //return ok(grades);
         }
 
 
@@ -51,6 +63,7 @@ namespace OmegaProject.Controllers
         {
             if (g == null)
                 return BadRequest("Faild saving Grade");
+
             var xg = db.Grades.FirstOrDefault(
                 f => f.GroupId == g.GroupId
             && f.StudentId == g.StudentId
@@ -92,8 +105,18 @@ namespace OmegaProject.Controllers
             grade.GroupId= g.GroupId;
             grade.Note=g.Note;
             grade.TestId = g.TestId;
+
+            var xg = db.Grades.Include(f=>f.Student).FirstOrDefault(
+                 f => f.GroupId == g.GroupId
+             && f.StudentId == g.StudentId
+             && f.TestId == g.TestId
+             );
+
+            if (xg!=null && xg.Id != grade.Id)
+                return BadRequest("Current Grade Already Exist For This Student");
+
             db.SaveChanges();
-            return Ok("Grade Added Successfully");
+            return Ok("Grade Edited Successfully");
         }
     }
 }

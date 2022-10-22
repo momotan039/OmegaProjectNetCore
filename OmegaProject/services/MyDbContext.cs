@@ -21,6 +21,9 @@ namespace OmegaProject.services
         public DbSet<UserGroup> UsersGroups { get; set; }
         public DbSet<HomeWork> HomeWorks { get; set; }
         public DbSet<HomeWorkStudent> HomeWorkStudents { get; set; }
+        public DbSet<ContactUsMessage> ContactUsMessages { get; set; }
+        public DbSet<New> News { get; set; }
+        public DbSet<Staff> Staffs { get; set; }
         private static DbContextOptions options;
         public  MyDbContext(DbContextOptions dbContextOption):base(dbContextOption)
         {
