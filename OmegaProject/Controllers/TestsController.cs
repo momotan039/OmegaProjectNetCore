@@ -57,6 +57,8 @@ namespace OmegaProject.Controllers
 
             t.Name=test.Name;
             t.Date=test.Date;
+            t.FullGrade=test.FullGrade;
+            t.MinGrade=test.MinGrade;
             db.SaveChanges();
             return Ok("Test Edited Successfully");
         }

@@ -109,16 +109,23 @@ namespace OmegaProject.Controllers
             return Ok(result);
         }
 
+
+
         [HttpGet]
-        [Route("GetGroupById/{id}")]
-        public IActionResult GetGroupById(int id)
+        [Route("GetGroupById/{id}/{Include?}")]
+        public IActionResult GetGroupById(int id,bool Include=true)
         {
-            var g = db.Groups.Include(q => q.UserGroups).
+            Group g=new Group();
+            if (Include)
+             g = db.Groups.Include(q => q.UserGroups).
                 ThenInclude(q => q.User).
                 ThenInclude(q => q.Role).
                 SingleOrDefault(x => x.Id == id);
+            else
+                g=db.Groups.SingleOrDefault(x => x.Id == id);
             if (g == null)
                 return NotFound("Not Found Group");
+
             return Ok(g);
         }
 

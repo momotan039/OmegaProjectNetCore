@@ -24,6 +24,8 @@ namespace OmegaProject.services
         public DbSet<ContactUsMessage> ContactUsMessages { get; set; }
         public DbSet<New> News { get; set; }
         public DbSet<Staff> Staffs { get; set; }
+        public DbSet<Attendance> Attendances { get; set; }
+
         private static DbContextOptions options;
         public  MyDbContext(DbContextOptions dbContextOption):base(dbContextOption)
         {

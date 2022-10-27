@@ -87,6 +87,7 @@ namespace OmegaProject
         {
 
             MyTools.ImagesRoot = System.IO.Path.Combine(env.WebRootPath, "Images");
+            MyTools.Root = env.WebRootPath;
 
             if (env.IsDevelopment())
             {

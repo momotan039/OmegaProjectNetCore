@@ -113,6 +113,7 @@ namespace OmegaProject.Controllers
 
             if (!System.IO.File.Exists(Path.Combine(mainRoot, file)))
                 return Path.Combine(mainRoot, file);
+
             string ext = Path.GetExtension(file);
             int i = 1;
             while (true)

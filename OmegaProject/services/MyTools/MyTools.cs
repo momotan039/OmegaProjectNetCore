@@ -8,6 +8,8 @@ namespace OmegaProject.services
 {
     public partial class MyTools 
     {
+        internal static string Root;
+
         public static string ImagesRoot { get; internal set; }
 
 
