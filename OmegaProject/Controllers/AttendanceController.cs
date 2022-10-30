@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using OmegaProject.Entity;
 using OmegaProject.services;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -94,20 +95,41 @@ namespace OmegaProject.Controllers
         [Obsolete]
         [HttpGet]
         [Route("GetAttendanceStatistics/{groupId}/{studentId}")]
-        public IActionResult GetAttendanceStatistics(int groupId, int studentId)
+        public async Task<IActionResult> GetAttendanceStatistics(int groupId, int studentId)
         {
-            var d=db.Attendances.FromSql($"select count(*),Month(Attendances.Date) from Attendances group by Month(Attendances.Date)").ToList();
-           
-            var data = db.Attendances.Include(f => f.Group)
+            //select cast((COUNT(CASE WHEN Attendances.Status = 1 THEN 1 END)*1.0 / count(*))as float) as counts ,Month(Attendances.Date) as months from Attendances where Attendances.StudentId = 4148 group by Month(Attendances.Date)
+            //var d = db.Attendances.FromSql("select cast((COUNT(CASE WHEN Attendances.Status = 1 THEN 1 END)*1.0 / count(*))as float) as counts ,Month(Attendances.Date) as months from Attendances where Attendances.StudentId = 4148 group by Month(Attendances.Date)").ToList();
+            
+            var data = await db.Attendances
                 .Where(f => f.StudentId == studentId && f.GroupId == groupId).GroupBy(f=>f.Date.Month)
                 .Select(x => new
                 {
-                    x.Key,
+                    month=CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(x.Key),
+                    month_int=x.Key,
                     count=x.Count()
                 })
-                .ToList();
+                .ToListAsync();
 
-            return Ok(data);
+            var months = new List<string>();
+            var counts = new List<float>();
+            data.ForEach(x =>
+            {
+                months.Add(x.month);
+                int countPresents = db.Attendances.
+                Where(f => f.StudentId == studentId && f.GroupId == groupId && f.Date.Month == x.month_int && f.Status == true).
+                Count();
+                 float _counts = countPresents / x.count;
+                counts.Add(_counts);
+            });
+
+           
+            var _result = new
+            {
+                months = months,
+                counts = counts
+            };
+
+            return Ok(_result);
         }
 
         [HttpPost]
