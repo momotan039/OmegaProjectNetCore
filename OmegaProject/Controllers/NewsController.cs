@@ -22,8 +22,23 @@ namespace OmegaProject.Controllers
         public IActionResult GetAll()
         {
 
-            var data = db.News.OrderByDescending(f=>f.Date).ToList();
+            var data = db.News.OrderByDescending(f => f.Date).Select(f => new
+            {
+                id = f.Id,
+                title = f.Title,
+                describe = f.Describe.Substring(0,100)+"...",
+                imageUrl = f.ImageUrl,
+                date = f.Date
+            }).ToList();
             return Ok(data);
+        }
+
+        [HttpGet]
+        [Route("GetOne/{id}")]
+        public IActionResult GetOne(int id)
+        {
+            var _new=db.News.FirstOrDefault(f => f.Id == id);
+            return Ok(_new);
         }
 
         [HttpPost]

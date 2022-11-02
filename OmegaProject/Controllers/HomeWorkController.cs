@@ -276,16 +276,18 @@ namespace OmegaProject.Controllers
                 Where(w => w.TeacherId == id).
                 OrderByDescending(q => q.SendingDate).
                 ToList();
-                //.ForEach(f =>
+                //.Select(f => new
                 //{
-                //    dynamic hw=new ExpandoObject();
-                //    hw.teacherId = id;
-                //    hw.title = f.Title;
-                //    hw.sendingDate = f.SendingDate;
-                //    hw.group = f.Group;
-                //    hw.id = f.Id;
-                //    hw.requiredSubmit = f.RequiredSubmit?"Yes":"No";
-                //    hws.Add(hw);
+                //    id = f.Id,
+                //    title = f.Title,
+                //    sendingDate = f.SendingDate,
+                //    requiredSubmit = f.RequiredSubmit ? "Yes" : "No",
+                //    contents = f.Contents,
+                //    filesPath = f.FilesPath,
+                //    groupId = f.GroupId,
+                //    group = f.Group,
+                //    teacher=f.Teacher,
+                //    teacherId = f.TeacherId,
                 //});
             return Ok(hwsList);
         }

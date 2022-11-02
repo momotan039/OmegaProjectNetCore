@@ -157,30 +157,38 @@ namespace OmegaProject.Controllers
                 return NotFound("Faild Deleted ...This Group not Exist !!");
 
 
-            //delete HomeWork Files that Releated to this Group
-            var path = hosting.WebRootPath + "\\HomeWork" + "\\Files" + "\\" + id;
+            
+            var pathTeacher = hosting.WebRootPath + "\\HomeWork" + "\\Teachers";
+            var pathStudent = hosting.WebRootPath + "\\HomeWork" + "\\Submited";
             try
             {
-                if (Directory.Exists(path))
+                //delete HomeWork Teacher that Releated to this Group
+                foreach (var folder in Directory.GetDirectories(pathTeacher))
                 {
-                    Directory.Delete(path,true);
+                    if(folder.Split('\\').Last()==id+"")
+                    System.IO.Directory.Delete(folder,true);
                 }
+
+                //delete HomeWork Teacher that Releated to this Group
+                foreach (var folder in Directory.GetDirectories(pathStudent))
+                {
+                    if (folder.Split('\\').Last() == id + "")
+                        System.IO.Directory.Delete(folder, true);
+                }
+
             }
+
             catch (Exception r)
             {
                 return BadRequest(r.Message);
             }
 
-            //foreach (var file in Directory.GetFiles(imagesFolder))
-            //{
-            //    System.IO.File.Delete(file);
-            //}
-            //delete this group
-            //First Delete All opened Group Messages
+            //Last Delete All opened Group Messages
             temp.GroupMessages.ToList().ForEach(m =>
             {
                 db.OpendGroupMessages.RemoveRange(db.OpendGroupMessages.Where(f=>f.MessageId==m.Id));
             });
+
             db.Groups.Remove(temp);
             db.SaveChanges();
             return Ok("Group Deleted Successfully");

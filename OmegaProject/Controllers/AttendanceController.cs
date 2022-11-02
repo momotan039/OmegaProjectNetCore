@@ -118,7 +118,7 @@ namespace OmegaProject.Controllers
                 int countPresents = db.Attendances.
                 Where(f => f.StudentId == studentId && f.GroupId == groupId && f.Date.Month == x.month_int && f.Status == true).
                 Count();
-                 float _counts = countPresents / x.count;
+                 float _counts = (float)countPresents / x.count;
                 counts.Add(_counts);
             });
 
@@ -131,6 +131,46 @@ namespace OmegaProject.Controllers
 
             return Ok(_result);
         }
+
+        //[Obsolete]
+        //[HttpGet]
+        //[Route("GetAttendanceStatisticsPerGroup/{studentId}")]
+        //public async Task<IActionResult> GetAttendanceStatisticsPerGroup( int studentId)
+        //{
+        //    //select cast((COUNT(CASE WHEN Attendances.Status = 1 THEN 1 END)*1.0 / count(*))as float) as counts ,Month(Attendances.Date) as months from Attendances where Attendances.StudentId = 4148 group by Month(Attendances.Date)
+        //    //var d = db.Attendances.FromSql("select cast((COUNT(CASE WHEN Attendances.Status = 1 THEN 1 END)*1.0 / count(*))as float) as counts ,Month(Attendances.Date) as months from Attendances where Attendances.StudentId = 4148 group by Month(Attendances.Date)").ToList();
+
+        //    var data = await db.Attendances
+        //        .Where(f => f.StudentId == studentId).GroupBy(f => f.Date.Month && f.GroupId)
+        //        .Select(x => new
+        //        {
+        //            month = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(x.Key),
+        //            month_int = x.Key,
+        //            count = x.Count()
+        //        })
+        //        .ToListAsync();
+
+        //    var months = new List<string>();
+        //    var counts = new List<float>();
+        //    data.ForEach(x =>
+        //    {
+        //        months.Add(x.month);
+        //        int countPresents = db.Attendances.
+        //        Where(f => f.StudentId == studentId && f.GroupId == groupId && f.Date.Month == x.month_int && f.Status == true).
+        //        Count();
+        //        float _counts = (float)countPresents / x.count;
+        //        counts.Add(_counts);
+        //    });
+
+
+        //    var _result = new
+        //    {
+        //        months = months,
+        //        counts = counts
+        //    };
+
+        //    return Ok(_result);
+        //}
 
         [HttpPost]
         [Route("Post")]

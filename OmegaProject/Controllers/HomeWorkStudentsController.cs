@@ -308,5 +308,47 @@ namespace OmegaProject.Controllers
             byte[] fileBytes = System.IO.File.ReadAllBytes(url);
             return File(fileBytes, "application/force-download", Path.GetFileName(url));
         }
+
+
+        [Obsolete]
+        [HttpGet]
+        [Route("GetHomeWorkStatistics/{studentId}")]
+        public async Task<IActionResult> GetHomeWorkStatistics(int studentId)
+        {
+            //select cast((COUNT(CASE WHEN Attendances.Status = 1 THEN 1 END)*1.0 / count(*))as float) as counts ,Month(Attendances.Date) as months from Attendances where Attendances.StudentId = 4148 group by Month(Attendances.Date)
+            //var d = db.Attendances.FromSql("select cast((COUNT(CASE WHEN Attendances.Status = 1 THEN 1 END)*1.0 / count(*))as float) as counts ,Month(Attendances.Date) as months from Attendances where Attendances.StudentId = 4148 group by Month(Attendances.Date)").ToList();
+
+            var groupsStudent = db.UsersGroups.Where(f => f.UserId == studentId).ToList();
+            var groups = new List<string>();
+            var counts = new List<float>();
+            string group = "";
+            //all group of student
+            groupsStudent.ForEach(g =>
+            {
+                int count_submited = 0;
+
+                //get all required sumbit homeworks
+                var rshs = db.HomeWorks.Include(f => f.Group).Where(f => f.GroupId == g.GroupId && f.RequiredSubmit==true).ToList();
+                rshs.ForEach(rsh =>
+                {
+                    var homeworkStudent = db.HomeWorkStudents.FirstOrDefault(f => f.HomeWorkId == rsh.Id && f.StudentId == studentId);
+                    group = rsh.Group.Name;
+                    //count all submited student of homeoworks
+                    if (homeworkStudent!=null)
+                        count_submited++;
+                });
+                groups.Add(group);
+                counts.Add((float)count_submited / rshs.Count());
+
+            });
+
+            var _result = new
+            {
+                groups = groups,
+                counts = counts
+            };
+
+            return Ok(_result);
+        }
     }
 }

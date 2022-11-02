@@ -102,7 +102,7 @@ namespace OmegaProject.Controllers
                 usersRes.Add(db.Users.FirstOrDefault(f=>f.Id==id));
             });
 
-            if (user.RoleId == 2)//get admins if user teacher
+            //if (user.RoleId == 2)//get admins if user teacher
                 db.Users.Where(u => u.RoleId == 1).ToList().ForEach((u) => {
                     usersRes.Add(u);
                 });

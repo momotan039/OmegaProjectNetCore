@@ -92,7 +92,6 @@ namespace OmegaProject.Controllers
         {
             int id = int.Parse(jwt.GetTokenClaims());
             //if this a sender or reciver get all messages between each other
-
             var msgs = await db.Messages.Include(q => q.Sender)
                 .Where(x =>
             (x.ReciverId == idReciver && x.SenderId == id) ||
@@ -109,6 +108,35 @@ namespace OmegaProject.Controllers
             eo.messages= msgs.TakeLast(totalMessages);
             return Ok(eo);
         }
+
+
+        [HttpGet]
+        [Route("GetMessagesByReciver2/{idReciver}/{current_messages}")]
+        public async Task<IActionResult> GetMessagesByReciverAsync2(int idReciver, int current_messages)
+        {
+            int id = int.Parse(jwt.GetTokenClaims());
+            //if this a sender or reciver get all messages between each other
+            var msgs = await db.Messages.Include(q => q.Sender)
+                .Where(x =>
+            (x.ReciverId == idReciver && x.SenderId == id) ||
+            (x.ReciverId == id && x.SenderId == idReciver)
+            ).ToListAsync();
+
+            if (current_messages == 0)
+                current_messages = totalMessages;
+
+            bool found_previous = msgs.SkipLast(current_messages).Count() > 0 ? true : false;
+            dynamic eo = new ExpandoObject();
+            eo.found_previous = found_previous;
+
+            eo.messages = msgs.TakeLast(totalMessages).GroupBy(f => f.SendingDate.ToShortDateString())
+                .Select(f => new
+                {
+                    date = f.Key
+                });
+            return Ok(eo);
+        }
+
         [HttpGet]
         [Route("GetPreviousMessages/{idReciver}/{current_messages}")]
         public async Task<IActionResult> GetPreviousMessages(int idReciver,int current_messages)
