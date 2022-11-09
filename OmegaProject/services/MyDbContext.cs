@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
 using OmegaProject.Entity;
+using OmegaProject.Entity.Guest_Site;
 
 namespace OmegaProject.services
 {
@@ -25,6 +26,8 @@ namespace OmegaProject.services
         public DbSet<New> News { get; set; }
         public DbSet<Staff> Staffs { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
+        public DbSet<TopSliderImage> TopsliderImages { get; set; }
+        public DbSet<Opinion> Opinions { get; set; }
 
         private static DbContextOptions options;
         public  MyDbContext(DbContextOptions dbContextOption):base(dbContextOption)

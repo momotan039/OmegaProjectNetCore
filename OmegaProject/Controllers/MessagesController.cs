@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
 using OmegaProject.services;
+using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -92,14 +93,36 @@ namespace OmegaProject.Controllers
         {
             int id = int.Parse(jwt.GetTokenClaims());
             //if this a sender or reciver get all messages between each other
-            var msgs = await db.Messages.Include(q => q.Sender)
+            var msgs = await db.Messages.Include(q =>q.Sender)
                 .Where(x =>
             (x.ReciverId == idReciver && x.SenderId == id) ||
             (x.ReciverId == id && x.SenderId == idReciver)
             ).ToListAsync();
 
+            var unreadMsgs=await db.Messages.Include(q => q.Sender)
+                .Where(x =>
+               !x.IsOpened && x.ReciverId == id
+            ).ToListAsync();
+
+           // dynamic _eo = new ExpandoObject();
+
+           // if (unreadMsgs.Count()>=totalMessages)
+           // {
+           //     bool _found_previous = msgs.SkipLast(current_messages).Count() > 0 ? true : false;
+           //     _eo.found_previous = _found_previous;
+           //     _eo.messages = unreadMsgs.TakeLast(totalMessages);
+           // }
+           //else
+           // {
+           //     _eo.messages = unreadMsgs.Concat(msgs.TakeLast(totalMessages-unreadMsgs.Count()));
+           // }
+
+           // return Ok(_eo);
+
+
             if (current_messages == 0)
                 current_messages = totalMessages;
+
 
             bool found_previous = msgs.SkipLast(current_messages).Count()>0? true:false;
 
@@ -155,53 +178,57 @@ namespace OmegaProject.Controllers
             return Ok(eo);
         }
 
+        [Obsolete]
         [HttpGet]
         [Route("GetAllUnreadMessages")]
-        public IActionResult GetAllUnreadMessages()
+        public async Task<IActionResult> GetAllUnreadMessages()
         {
 
             int id = int.Parse(jwt.GetTokenClaims());
 
             //get all groups of this user
-            var UsersGroups =  db.UsersGroups.Include(f=>f.Group).Where(f => f.UserId == id).ToList();
+            var UsersGroups = await  db.UsersGroups.Include(f=>f.Group).Where(f => f.UserId == id).ToListAsync();
 
             //get msgs that not user sent to group
-            var msgsGropup = db.GroupMessages
-                .Include(f=>f.OpendGroupMessages)
+            var msgsGropup = await db.GroupMessages
+                .Include(f => f.OpendGroupMessages)
                 .Where(mg =>
-                mg.SenderId!=id 
-                //&&
-                //UsersGroups.Any(f=>f.GroupId==mg.GroupId)
-                )
-                .ToList();
+                mg.SenderId != id
+                ).ToListAsync();
 
             //Get All Opend GroupMessages
             var opendGroupMessages = db.OpendGroupMessages.Where(f => f.UserId == id);
 
             List<ExpandoObject> temp = new List<ExpandoObject>();
 
+            //1- Get all messages that not opend from Groups
             msgsGropup.ForEach(msg =>
             {
-                var foundOpenedMessage = opendGroupMessages.FirstOrDefault(f => f.MessageId == msg.Id && f.UserId == id);
-
-                if (foundOpenedMessage == null)
+                //check if group user in this group
+                if (UsersGroups.Any(f => f.GroupId == msg.GroupId))
                 {
-                    dynamic _msg = new ExpandoObject();
-                    _msg.id = msg.Id;
-                    _msg.senderId = msg.SenderId;
-                    _msg.contents = msg.Contents;
-                    _msg.isOpened = false;
-                    _msg.reciverId = msg.GroupId;
-                    _msg.sendingDate = msg.SendingDate;
-                    _msg.isGroup = true;
-                    temp.Add(_msg);
+                    var foundOpenedMessage = opendGroupMessages.FirstOrDefault(f => f.MessageId == msg.Id && f.UserId == id);
+
+                    if (foundOpenedMessage == null)
+                    {
+                        dynamic _msg = new ExpandoObject();
+                        _msg.id = msg.Id;
+                        _msg.senderId = msg.SenderId;
+                        _msg.contents = msg.Contents;
+                        _msg.isOpened = false;
+                        _msg.reciverId = msg.GroupId;
+                        _msg.sendingDate = msg.SendingDate;
+                        _msg.isGroup = true;
+                        temp.Add(_msg);
+                    }
                 }
+             
 
             });
 
-
-            var msgs = db.Messages
-                .Where(q => !q.IsOpened && q.ReciverId == id).ToList();
+             //2- Get all messages that not opend from users
+            var msgs = await db.Messages
+                .Where(q => !q.IsOpened && q.ReciverId == id).ToListAsync();
 
             msgs.ForEach(msg =>
             {

@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using OmegaProject.Entity;
 using OmegaProject.services;
-using System;
 using System.IO;
 using System.Linq;
 
@@ -10,49 +9,63 @@ namespace OmegaProject.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class StaffsController : ControllerBase
+    public class NewsController : ControllerBase
     {
         private readonly MyDbContext db;
 
-        public StaffsController(MyDbContext db)
+        public NewsController(MyDbContext db)
         {
             this.db = db;
         }
-
         [HttpGet]
         [Route("GetAll")]
         public IActionResult GetAll()
         {
 
-            var data = db.Staffs.ToList();
+            var data = db.News.OrderByDescending(f => f.Date).Select(f => new
+            {
+                id = f.Id,
+                title = f.Title,
+                describe = f.Describe.Substring(0,100)+"...",
+                imageUrl = f.ImageUrl,
+                date = f.Date
+            }).ToList();
             return Ok(data);
+        }
+
+        [HttpGet]
+        [Route("GetOne/{id}")]
+        public IActionResult GetOne(int id)
+        {
+            var _new=db.News.FirstOrDefault(f => f.Id == id);
+            return Ok(_new);
         }
 
         [HttpPost]
         [Route("Add")]
         public IActionResult Post(IFormFile file)
         {
-            var s = new Staff();
-            s.Name=HttpContext.Request.Form["name"];
-            s.Work=HttpContext.Request.Form["Work"];
-            s.About=HttpContext.Request.Form["About"];
+            var s = new New();
+            s.Title = HttpContext.Request.Form["title"];
+            s.Date = System.DateTime.Parse(HttpContext.Request.Form["date"]);
+            s.Describe = HttpContext.Request.Form["describe"];
             try
             {
-                if(file!=null)
+                if (file != null)
                 {
                     InitNecessaryFolders();
-                    string nameFile = CustomizePathFile(MyTools.ImagesRoot + "\\Staff\\", file.FileName);
-                    SaveFileOnServerStorage(MyTools.ImagesRoot + "\\Staff\\" + nameFile, file);
-                    s.ImageUrl = "Images\\Staff\\" + nameFile;
+                    string nameFile = CustomizePathFile(MyTools.ImagesRoot + "\\News\\", file.FileName);
+                    SaveFileOnServerStorage(MyTools.ImagesRoot + "\\News\\" + nameFile, file);
+                    s.ImageUrl = "Images\\News\\" + nameFile;
                 }
-                db.Staffs.Add(s);
+                db.News.Add(s);
                 db.SaveChanges();
             }
-            catch(Exception exception)
+            catch 
             {
                 return BadRequest("خطأ في الخادم");
             }
-            return Ok("تم اضافة شخص جديد للطاقم بنجاح");
+            return Ok("New Activty Added Successfully");
         }
 
 
@@ -60,77 +73,75 @@ namespace OmegaProject.Controllers
         [Route("Delete/{id}")]
         public IActionResult Delete(int id)
         {
-            var s = db.Staffs.FirstOrDefault(f => f.Id == id);
+            var s = db.News.FirstOrDefault(f => f.Id == id);
             if (s == null)
-                return NotFound("Not Found This Member");
+                return NotFound("Not Found This Activity");
 
             try
             {
-                if(s.ImageUrl!=null ||s.ImageUrl=="")
-                System.IO.File.Delete(Path.Combine(MyTools.Root,s.ImageUrl));
+                if (s.ImageUrl != null || s.ImageUrl == "")
+                    System.IO.File.Delete(Path.Combine(MyTools.Root, s.ImageUrl));
 
-                db.Staffs.Remove(s);
+                db.News.Remove(s);
                 db.SaveChanges();
             }
             catch
             {
                 return BadRequest("خطأ في الخادم");
             }
-            return Ok("تم حذف هذا العضو بنجاح");
+            return Ok(" Activty Deleted Successfully");
         }
 
         [HttpPut]
         [Route("EditOne")]
         public IActionResult Povst(IFormFile file)
         {
-            var s = new Staff();
+            var s = new New();
             s.Id = int.Parse(HttpContext.Request.Form["id"]);
-            var t=db.Staffs.FirstOrDefault(t=>t.Id == s.Id);
+            var t = db.News.FirstOrDefault(t => t.Id == s.Id);
 
             if (t == null)
                 return NotFound("This Member Not Found");
-
-            t.Name = HttpContext.Request.Form["name"];
-            t.Work = HttpContext.Request.Form["Work"];
-            t.About = HttpContext.Request.Form["About"];
+            t.Title = HttpContext.Request.Form["title"];
+            t.Date = System.DateTime.Parse(HttpContext.Request.Form["date"]);
+            t.Describe = HttpContext.Request.Form["describe"];
 
             //remove last image if exist
-            if (System.IO.File.Exists(MyTools.Root + "\\" + t.ImageUrl))
+            if(System.IO.File.Exists(MyTools.Root+"\\"+ t.ImageUrl))
                 System.IO.File.Delete(MyTools.Root + "\\" + t.ImageUrl);
 
             try
             {
-                if(file!=null)
+                if (file != null)
                 {
                     InitNecessaryFolders();
-                    string nameFile = CustomizePathFile(MyTools.ImagesRoot + "\\Staff\\", file.FileName);
-                    t.ImageUrl = "Images\\Staff\\" + nameFile;
-                    SaveFileOnServerStorage(MyTools.ImagesRoot + "\\Staff\\" + nameFile, file);
+                    string nameFile = CustomizePathFile(MyTools.ImagesRoot + "\\News\\", file.FileName);
+                    t.ImageUrl = "Images\\News\\" + nameFile;
+                    SaveFileOnServerStorage(MyTools.ImagesRoot + "\\News\\" + nameFile, file);
                 }
-               
+
                 db.SaveChanges();
             }
-            catch (Exception exception)
+            catch 
             {
                 return BadRequest("خطأ في الخادم");
             }
-            return Ok("Member Edited Successfully");
+            return Ok("Activty Edited Successfully");
         }
-
 
 
         private void SaveFileOnServerStorage(string path, IFormFile file)
         {
-           
-            
-                using (var fs = new FileStream(path, FileMode.Create))
+
+
+            using (var fs = new FileStream(path, FileMode.Create))
+            {
+                if (file != null)
                 {
-                    if (file != null)
-                    {
-                        file.CopyTo(fs);
-                    }
+                    file.CopyTo(fs);
                 }
-            
+            }
+
         }
 
         private string CustomizePathFile(string mainRoot, string file)
@@ -167,12 +178,10 @@ namespace OmegaProject.Controllers
             if (!Directory.Exists(MyTools.ImagesRoot))
                 Directory.CreateDirectory(MyTools.ImagesRoot);
 
-            //check if exist staff folder and create it
-            if (!Directory.Exists(MyTools.ImagesRoot+"\\Staff"))
-                Directory.CreateDirectory(MyTools.ImagesRoot + "\\Staff");
+            //check if exist News folder and create it
+            if (!Directory.Exists(MyTools.ImagesRoot + "\\News"))
+                Directory.CreateDirectory(MyTools.ImagesRoot + "\\News");
 
         }
-
-
     }
 }
