@@ -95,14 +95,16 @@ namespace OmegaProject.Controllers
             t.Work = HttpContext.Request.Form["Work"];
             t.About = HttpContext.Request.Form["About"];
 
-            //remove last image if exist
-            if (System.IO.File.Exists(MyTools.Root + "\\" + t.ImageUrl))
-                System.IO.File.Delete(MyTools.Root + "\\" + t.ImageUrl);
+           
 
             try
             {
                 if(file!=null)
                 {
+                    //remove last image if exist
+                    if (System.IO.File.Exists(MyTools.Root + "\\" + t.ImageUrl))
+                        System.IO.File.Delete(MyTools.Root + "\\" + t.ImageUrl);
+
                     InitNecessaryFolders();
                     string nameFile = CustomizePathFile(MyTools.ImagesRoot + "\\Staff\\", file.FileName);
                     t.ImageUrl = "Images\\Staff\\" + nameFile;

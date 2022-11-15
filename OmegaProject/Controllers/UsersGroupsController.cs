@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
+using OmegaProject.Entity;
 using OmegaProject.services;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,28 @@ namespace OmegaProject.Controllers
             foreach(var ug in uGs)
             {
                 db.UsersGroups.Add(ug);
+                var user = db.Users.FirstOrDefault(f=>f.Id==ug.UserId);
+                if (user.RoleId == 3)
+                    db.Attendances.Where(f => f.GroupId == ug.GroupId)
+                        .GroupBy(f => f.Date)
+                        .Select(f => new
+                        {
+                            date=f.Key
+                        }).ToList().ForEach(f =>
+                        {
+                            db.Attendances.Add(new Attendance
+                            {
+                                Date = f.date,
+                                GroupId = ug.GroupId,
+                                StudentId = ug.UserId,
+                                Status=false
+                            });
+                        });
             }
+//            select count(*) as count,date from Attendances
+//where GroupId = 3041
+//group by date
+           
             //Add User
             db.SaveChanges();
              return Ok("User Added To Group Successfully");

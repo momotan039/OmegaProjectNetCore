@@ -189,6 +189,12 @@ namespace OmegaProject.Controllers
             //get all groups of this user
             var UsersGroups = await  db.UsersGroups.Include(f=>f.Group).Where(f => f.UserId == id).ToListAsync();
 
+            //if user is Admin
+            await db.Groups.ForEachAsync(g =>
+            {
+                UsersGroups.Add(new UserGroup { GroupId=g.Id});
+            });
+
             //get msgs that not user sent to group
             var msgsGropup = await db.GroupMessages
                 .Include(f => f.OpendGroupMessages)
