@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OmegaProject.DTO;
 using OmegaProject.services;
+using System;
 using System.IO;
 using System.Linq;
 
@@ -78,9 +79,11 @@ namespace OmegaProject.Controllers
             if (!Directory.Exists(Image_path))
                 Directory.CreateDirectory(Image_path);
 
+            Random r = new Random();
+
             //set image name by user id
             //string imageName = user.Id+Path.GetFileNameWithoutExtension(image.FileName) + Path.GetExtension(image.FileName);
-            string imageName = user.Id+ Path.GetExtension(image.FileName);
+            string imageName = r.Next(10000000, 1000000000) + Path.GetExtension(image.FileName);
            
             Image_path = Path.Combine(Image_path, imageName);
 
@@ -98,7 +101,9 @@ namespace OmegaProject.Controllers
 
         [HttpPut]
         [Route("EditImageProfileGroup")]
-        public IActionResult EditImageProfileGroup(IFormFile image)
+        public IActionResult 
+            
+            Group(IFormFile image)
         {
             if (image == null)
                 return BadRequest("Image is null");
@@ -119,8 +124,9 @@ namespace OmegaProject.Controllers
             if (!Directory.Exists(Image_path))
                 Directory.CreateDirectory(Image_path);
 
+            Random r = new Random();
             //set image name by group id
-            string imageName = id_group + Path.GetExtension(image.FileName);
+            string imageName = r.Next(10000000, 1000000000) + Path.GetExtension(image.FileName);
 
             Image_path = Path.Combine(Image_path,imageName);
 
