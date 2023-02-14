@@ -47,6 +47,7 @@ namespace OmegaProject.Controllers
         [Route("Delete/{id}")]
         public IActionResult Delete(int id)
         {
+            
             var cum=db.ContactUsMessages.FirstOrDefault(f=>f.Id==id);
             if (cum == null)
                 return NotFound("Not Found Item");
@@ -59,7 +60,7 @@ namespace OmegaProject.Controllers
             {
                 return BadRequest("Occured Error While Removing Message");
             }
-            return Ok("Message Deleted Successfully");
+            return Ok("Inquirie Deleted Successfully");
         }
     }
 }
