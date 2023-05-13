@@ -212,7 +212,7 @@ namespace OmegaProject.Controllers
                 counts.Add(_counts);
             });
 
-           
+
             var _result = new
             {
                 months = months,
