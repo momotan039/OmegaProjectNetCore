@@ -51,7 +51,6 @@ namespace OmegaProject.Controllers
                 obj.sumGrade = f.SumGrade;
                 objs.Add(obj);
             });
-            
             return Ok(objs);
             //return ok(grades);
         }

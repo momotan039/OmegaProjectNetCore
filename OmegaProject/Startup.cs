@@ -13,6 +13,7 @@ namespace OmegaProject
 {
     public class Startup
     {
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -33,7 +34,7 @@ namespace OmegaProject
             //Configure cors in service
             services.AddCors(option => option.AddPolicy("myPolicy", builder =>
             {
-                 builder.WithOrigins("http://localhost:4200", "https://omegaangular.firebaseapp.com")
+                 builder.WithOrigins("*")
             .AllowAnyHeader()
             .AllowAnyMethod();
                 //builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
@@ -42,7 +43,7 @@ namespace OmegaProject
             //to fix json lenth depth
             services.AddControllersWithViews().AddNewtonsoftJson(
                 options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
-
+            //to get current domain
             services.AddHttpContextAccessor();
             //To complete the injection process properly
             services.AddScoped<JwtService>();

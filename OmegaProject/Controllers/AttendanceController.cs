@@ -1,6 +1,7 @@
 ﻿
 
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OmegaProject.DTO;
@@ -20,13 +21,16 @@ namespace OmegaProject.Controllers
     [ApiController]
     public class AttendanceController : ControllerBase
     {
+        private readonly IHttpContextAccessor httpContextAccessor;
+
         private readonly MyDbContext db;
         private readonly JwtService jwt;
 
-        public AttendanceController(MyDbContext db,JwtService jwt)
+        public AttendanceController(MyDbContext db,JwtService jwt, IHttpContextAccessor httpContextAccessor)
         {
             this.db = db;
             this.jwt = jwt;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         [HttpGet]
@@ -182,14 +186,10 @@ namespace OmegaProject.Controllers
             return Ok(result);
         }
 
-        [Obsolete]
-        [HttpGet]
-        [Route("GetAttendanceStatistics/{groupId}/{studentId}")]
-        public async Task<IActionResult> GetAttendanceStatistics(int groupId, int studentId)
+        //[HttpGet]
+        //[Route("GetAttendanceStatistics/{groupId}/{studentId}")]
+        public async Task<object> GetAttendanceStatistics(int groupId, int studentId)
         {
-            //select cast((COUNT(CASE WHEN Attendances.Status = 1 THEN 1 END)*1.0 / count(*))as float) as counts ,Month(Attendances.Date) as months from Attendances where Attendances.StudentId = 4148 group by Month(Attendances.Date)
-            //var d = db.Attendances.FromSql("select cast((COUNT(CASE WHEN Attendances.Status = 1 THEN 1 END)*1.0 / count(*))as float) as counts ,Month(Attendances.Date) as months from Attendances where Attendances.StudentId = 4148 group by Month(Attendances.Date)").ToList();
-            
             var data = await db.Attendances
                 .Where(f => f.StudentId == studentId && f.GroupId == groupId).GroupBy(f=>f.Date.Month)
                 .Select(x => new
@@ -212,14 +212,74 @@ namespace OmegaProject.Controllers
                 counts.Add(_counts);
             });
 
-
             var _result = new
             {
                 months = months,
                 counts = counts
             };
 
-            return Ok(_result);
+            return _result;
+        }
+
+        public async Task<object> GetAttendanceStatistics2(int groupId, int studentId)
+        {
+            var allMonths = Enumerable.Range(1, 12)
+                .Select(monthNumber => new
+                {
+                    month = CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(monthNumber),
+                    month_int = monthNumber
+                })
+                .ToList();
+
+            var attendanceCounts = await db.Attendances
+                .Where(f => f.StudentId == studentId && f.GroupId == groupId)
+                .GroupBy(f => f.Date.Month)
+                .Select(x => new
+                {
+                    month_int = x.Key,
+                    count = x.Count()
+                })
+                .ToListAsync();
+
+            var counts = new List<string>();
+            allMonths.ForEach(month =>
+            {
+                var attendanceCount = attendanceCounts.FirstOrDefault(x => x.month_int == month.month_int);
+                int countPresents = attendanceCount != null
+                    ? db.Attendances
+                        .Where(f => f.StudentId == studentId && f.GroupId == groupId && f.Date.Month == month.month_int && f.Status == true)
+                        .Count()
+                    : 0;
+
+                string count = attendanceCount != null && attendanceCount.count > 0
+            ? ((float)countPresents / attendanceCount.count).ToString("F2")
+            : "0.00";
+
+                counts.Add(count);
+            });
+
+            var _result = new
+            {
+                months = allMonths.Select(x => x.month).ToList(),
+                counts = counts
+            };
+
+            return _result;
+        }
+
+
+        [HttpGet]
+        [Route("GetAttendanceStatisticsForGroups/{studentId}")]
+        public async Task<IActionResult> GetAttendanceStatisticsForGroups(int studentId,[FromQuery]int[] groups)
+        {
+            
+            var result=new List<object>();
+            foreach (int id in groups)
+            {
+                var data = await GetAttendanceStatistics2(id, studentId);
+                result.Add(data);
+            }
+            return Ok(result);
         }
 
         [Obsolete]
